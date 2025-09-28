@@ -61,7 +61,7 @@ class ExcelExporter:
         # Export format selection
         export_format = st.selectbox(
             "Select Export Format",
-            options=["Excel (XLSX)", "CSV", "Excel (XLS)", "TSV"],
+            options=["Excel (XLSX)", "CSV", "Excel (XLS)", "TSV", "JSON", "XML"],
             help="Choose the format for your exported data"
         )
         
@@ -70,7 +70,9 @@ class ExcelExporter:
             "Excel (XLSX)": ".xlsx",
             "CSV": ".csv",
             "Excel (XLS)": ".xls",
-            "TSV": ".tsv"
+            "TSV": ".tsv",
+            "JSON": ".json",
+            "XML": ".xml"
         }[export_format]
         
         filename = st.text_input(
@@ -113,7 +115,9 @@ class ExcelExporter:
                 "Excel (XLSX)": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Excel (XLS)": "application/vnd.ms-excel",
                 "CSV": "text/csv",
-                "TSV": "text/tab-separated-values"
+                "TSV": "text/tab-separated-values",
+                "JSON": "application/json",
+                "XML": "application/xml"
             }
             
             # Default sheet name for Excel formats
@@ -192,6 +196,12 @@ class ExcelExporter:
                 export_df.to_csv(output, index=False)
             elif export_format == "TSV":
                 export_df.to_csv(output, index=False, sep='\t')
+            elif export_format == "JSON":
+                export_df.to_json(output, orient='records', indent=2)
+            elif export_format == "XML":
+                # Convert DataFrame to XML
+                xml_content = self._dataframe_to_xml(export_df)
+                output.write(xml_content.encode('utf-8'))
             else:  # Excel formats
                 if "Excel (XLSX)" in export_format:
                     try:
@@ -279,51 +289,26 @@ class ExcelExporter:
         except Exception as e:
             st.error(f"Error creating file: {str(e)}")
             return b''
+    
+    def _dataframe_to_xml(self, df: pd.DataFrame) -> str:
+        """Convert DataFrame to XML format."""
+        xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
+        xml_lines.append('<data>')
         
-        # Define formats
-        formats = {
-            name: workbook.add_format(format_dict)
-            for name, format_dict in self.default_formats.items()
-        }
-        
-        # Apply header format
-        for col_num, value in enumerate(df.columns.values):
-            worksheet.write(0, col_num, value, formats['header'])
-        
-        # Write data with basic format
-        for row_num, row in enumerate(df.values, start=1):
-            for col_num, value in enumerate(row):
-                # Handle empty/NA values
-                if pd.isna(value) or value == '#NUM!':
-                    worksheet.write_blank(row_num, col_num, None, formats['cell'])
+        for index, row in df.iterrows():
+            xml_lines.append(f'  <record id="{index}">')
+            for col, value in row.items():
+                # Escape XML special characters
+                if pd.isna(value):
+                    value = ""
                 else:
-                    worksheet.write(row_num, col_num, value, formats['cell'])
+                    value = str(value).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                xml_lines.append(f'    <{col}>{value}</{col}>')
+            xml_lines.append('  </record>')
         
-        # Auto-fit columns
-        for col_num, column in enumerate(df.columns):
-            max_length = max(
-                df[column].astype(str).apply(len).max(),
-                len(str(column))
-            )
-            worksheet.set_column(col_num, col_num, max_length + 2)
+        xml_lines.append('</data>')
+        return '\n'.join(xml_lines)
         
-        # Freeze panes if requested
-        if freeze_header:
-            worksheet.freeze_panes(1, 0)
-        
-        # Apply validation highlighting if results provided
-        if validation_results:
-            self._apply_validation_highlighting(
-                worksheet,
-                validation_results,
-                formats,
-                df
-            )
-        
-        # Save and return
-        writer.close()
-        excel_data = output.getvalue()
-        return excel_data
     
     def _apply_validation_highlighting(
         self,

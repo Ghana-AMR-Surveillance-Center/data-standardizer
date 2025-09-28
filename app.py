@@ -11,6 +11,10 @@ from utils.validator import DataValidator
 from utils.excel_exporter import ExcelExporter
 from utils.file_merger import FileMerger
 from utils.helpers import generate_summary_stats
+from utils.data_quality import DataQualityAssessor
+from utils.data_profiler import DataProfiler
+from utils.logger import log_streamlit_action
+from utils.config import get_config
 
 # Configure Streamlit page
 st.set_page_config(
@@ -96,7 +100,7 @@ def show_progress():
         with col1:
             st.write("📤 Upload" + (" ✅" if steps['upload'] else ""))
         with col2:
-            st.write("� Map" + (" ✅" if steps['mapping'] else "") + " (Optional)")
+            st.write("🔗 Map" + (" ✅" if steps['mapping'] else "") + " (Optional)")
         with col3:
             st.write("🔧 Transform" + (" ✅" if steps['transform'] else ""))
         with col4:
@@ -109,7 +113,7 @@ def show_progress():
         
         st.progress(progress)
         with col1:
-            st.write("� Upload" + (" ✅" if steps['upload'] else ""))
+            st.write("📤 Upload" + (" ✅" if steps['upload'] else ""))
         with col2:
             st.write("🔄 Merge" + (" ✅" if steps['merge'] else ""))
         with col3:
@@ -119,6 +123,7 @@ def show_progress():
 
 def main():
     # Initialize components
+    config = get_config()
     file_handler = FileHandler()
     schema_analyzer = SchemaAnalyzer()
     column_mapper = ColumnMapper()
@@ -126,6 +131,8 @@ def main():
     validator = DataValidator()
     excel_exporter = ExcelExporter()
     file_merger = FileMerger()
+    quality_assessor = DataQualityAssessor()
+    data_profiler = DataProfiler()
     
     # Sidebar with logo and essential info
     with st.sidebar:
@@ -194,12 +201,23 @@ def main():
             if uploaded_df is not None:
                 st.session_state['data'] = uploaded_df
                 st.session_state['single_steps']['upload'] = True
+                log_streamlit_action("file_upload", f"Single file workflow - {len(uploaded_df)} rows, {len(uploaded_df.columns)} columns")
                 
                 with st.expander("View Data Preview", expanded=True):
                     file_handler.preview_data(uploaded_df)
                     schema_info = schema_analyzer.analyze_schema(uploaded_df)
                     st.write("### Column Information")
                     st.json(schema_info)
+                
+                # Add data quality assessment
+                with st.expander("📊 Data Quality Assessment", expanded=False):
+                    quality_results = quality_assessor.assess_data_quality(uploaded_df)
+                    quality_assessor.show_quality_report(quality_results)
+                
+                # Add data profiling
+                with st.expander("🔍 Data Profile", expanded=False):
+                    profile_results = data_profiler.profile_dataframe(uploaded_df)
+                    data_profiler.show_profile_report(profile_results)
         
         # Optional Mapping
         if st.session_state['single_steps']['upload'] and not st.session_state['single_steps']['mapping']:

@@ -94,13 +94,23 @@ class FileHandler:
             pd.DataFrame: Loaded dataframe
         """
         try:
+            # Reset file pointer
+            uploaded_file.seek(0)
             # Read Excel file
             df = pd.read_excel(uploaded_file, engine='openpyxl')
             st.success("Excel file loaded successfully")
             return df
         except Exception as e:
             st.error(f"Error reading Excel file: {str(e)}")
-            raise
+            # Try with different engine if openpyxl fails
+            try:
+                uploaded_file.seek(0)
+                df = pd.read_excel(uploaded_file, engine='xlrd')
+                st.success("Excel file loaded successfully with xlrd engine")
+                return df
+            except Exception as e2:
+                st.error(f"Error reading Excel file with both engines: {str(e2)}")
+                raise
     
     def get_file_info(self, df: pd.DataFrame, filename: str) -> Dict[str, Any]:
         """

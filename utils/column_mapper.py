@@ -6,7 +6,16 @@ Handles intelligent column mapping between source and target schemas.
 import streamlit as st
 import pandas as pd
 from typing import Dict, List, Optional
-from Levenshtein import ratio
+try:
+    from Levenshtein import ratio
+    LEVENSHTEIN_AVAILABLE = True
+except ImportError:
+    LEVENSHTEIN_AVAILABLE = False
+    # Fallback function for when Levenshtein is not available
+    def ratio(s1, s2):
+        """Fallback ratio function using difflib."""
+        from difflib import SequenceMatcher
+        return SequenceMatcher(None, s1, s2).ratio()
 
 class ColumnMapper:
     """Maps columns between source and target schemas using intelligent matching."""
@@ -209,31 +218,6 @@ class ColumnMapper:
                 return st.session_state.column_mappings, True
                 
         return st.session_state.column_mappings, False
-        
-        # Add a clear mappings button
-        if st.button("Clear All Mappings"):
-            st.session_state.column_mappings = {}
-        
-        # Show preview of mapped data
-        if st.session_state.column_mappings:
-            st.write("### Preview Mapped Data")
-            self._show_mapping_preview(df, st.session_state.column_mappings)
-        
-        return st.session_state.column_mappings
-        
-        # Validate mappings
-        if mappings:
-            missing_required = [col for col in required_fields if col not in mappings]
-            if missing_required:
-                st.error(f"Missing required mappings: {', '.join(missing_required)}")
-            else:
-                st.success("All required fields are mapped!")
-                
-                # Preview mapped data
-                if st.button("Preview Mapped Data"):
-                    self._show_mapping_preview(df, mappings)
-        
-        return mappings
     
     def _show_mapping_preview(self, df: pd.DataFrame, mappings: Dict[str, str]) -> None:
         """
@@ -338,21 +322,6 @@ class ColumnMapper:
         # Use Levenshtein distance for string similarity
         return ratio(source, target)
     
-    def _show_mapping_preview(self, df: pd.DataFrame, mappings: Dict[str, str]) -> None:
-        """
-        Show a preview of the mapped data.
-        
-        Args:
-            df: Source dataframe
-            mappings: Column mappings
-        """
-        # Create a preview of the mapped data
-        preview_df = pd.DataFrame()
-        for target_col, source_col in mappings.items():
-            preview_df[target_col] = df[source_col]
-        
-        st.write("### Mapped Data Preview")
-        st.dataframe(preview_df.head(), use_container_width=True)
     
     def apply_mappings(self, df: pd.DataFrame, mappings: Dict[str, str]) -> pd.DataFrame:
         """

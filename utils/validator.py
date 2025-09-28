@@ -131,14 +131,21 @@ class DataValidator:
         
         # Check format
         if 'format' in rules:
-            invalid_format = ~series.astype(str).str.match(rules['format'])
-            invalid_count = invalid_format.sum()
-            if invalid_count > 0:
-                results['errors'].append({
-                    'type': 'invalid_format',
+            try:
+                invalid_format = ~series.astype(str).str.match(rules['format'])
+                invalid_count = invalid_format.sum()
+                if invalid_count > 0:
+                    results['errors'].append({
+                        'type': 'invalid_format',
+                        'column': column_name,
+                        'rows': invalid_format[invalid_format].index.tolist(),
+                        'message': f"Found {invalid_count} values with invalid format in column '{column_name}'"
+                    })
+            except Exception as e:
+                results['warnings'].append({
+                    'type': 'format_check_failed',
                     'column': column_name,
-                    'rows': invalid_format[invalid_format].index.tolist(),
-                    'message': f"Found {invalid_count} values with invalid format in column '{column_name}'"
+                    'message': f"Could not validate format for column '{column_name}': {str(e)}"
                 })
         
         # Check allowed values

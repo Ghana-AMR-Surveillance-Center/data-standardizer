@@ -22,19 +22,40 @@ def prepare_df_for_display(df: pd.DataFrame) -> pd.DataFrame:
     
     # Convert mixed-type columns to appropriate types
     for col in df.columns:
-        # Try to convert to numeric if possible
         try:
             if df[col].dtype == 'object':
-                # First attempt to convert to numeric
-                numeric_conversion = pd.to_numeric(df[col], errors='coerce')
-                # If we have some valid numeric values and not all are NaN
-                if not numeric_conversion.isna().all() and numeric_conversion.notna().any():
-                    df[col] = numeric_conversion
+                # Check if column contains mixed types that cause Arrow issues
+                sample_values = df[col].dropna().head(10)
+                if len(sample_values) > 0:
+                    # Check for mixed numeric and string types
+                    has_numeric = any(pd.to_numeric(sample_values, errors='coerce').notna())
+                    has_string = any(isinstance(x, str) for x in sample_values if pd.notna(x))
+                    
+                    if has_numeric and has_string:
+                        # Mixed types - convert all to string for consistency
+                        df[col] = df[col].astype(str)
+                    elif has_numeric:
+                        # All numeric - convert to numeric
+                        df[col] = pd.to_numeric(df[col], errors='coerce')
+                    else:
+                        # All string - ensure consistent string type
+                        df[col] = df[col].astype(str)
                 else:
-                    # If not numeric, ensure string type
+                    # Empty column - keep as object
                     df[col] = df[col].astype(str)
-        except:
-            # If conversion fails, convert to string
+            else:
+                # For non-object columns, ensure they're Arrow-compatible
+                if df[col].dtype == 'datetime64[ns]':
+                    # Convert datetime to string for Arrow compatibility
+                    df[col] = df[col].astype(str)
+                elif 'int' in str(df[col].dtype):
+                    # Ensure integer columns are properly typed
+                    df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
+                elif 'float' in str(df[col].dtype):
+                    # Ensure float columns are properly typed
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+        except Exception:
+            # If any conversion fails, convert to string as fallback
             df[col] = df[col].astype(str)
     
     return df

@@ -62,6 +62,9 @@ class DataTransformer:
         if 'processed_data' not in st.session_state:
             st.session_state['processed_data'] = df.copy()
         
+        # **CRITICAL FIX**: Always update processed_data with current df
+        st.session_state['processed_data'] = df.copy()
+        
         # Update current columns tracking
         st.session_state['transformation_state']['current_columns'] = list(df.columns)
         
