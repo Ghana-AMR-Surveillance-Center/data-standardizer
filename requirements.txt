@@ -1,20 +1,28 @@
-# GLASS Data Standardizer - Production Dependencies
+# GLASS Data Standardizer v2.0.0 - Production Dependencies
+# Pinned versions for reproducibility (tested on 2025-09-28)
+# To update: run `pip install --upgrade <package>` and update version here
+
 # Core application dependencies
-streamlit>=1.28.0
-pandas>=1.5.0
-numpy>=1.21.0
+streamlit==1.47.0
+pandas==2.2.3
+numpy==2.2.6
 
 # File processing
-openpyxl>=3.0.9
-xlsxwriter>=3.0.0
-xlrd>=2.0.0,<3.0.0
+openpyxl==3.1.5
+xlsxwriter==3.2.9
+xlrd==2.0.2  # Note: xlrd 2.0+ only supports .xls files, not .xlsx
 
 # Data visualization and analysis
-plotly>=5.8.0
-scikit-learn>=1.0.0
+plotly==6.3.0
+
+# AMR Analytics dependencies
+kaleido==1.1.0
+seaborn==0.13.2
+matplotlib==3.10.6
 
 # Text processing and similarity
-python-Levenshtein>=0.21.0
+python-Levenshtein==0.27.1
 
-# System monitoring (optional)
-psutil>=5.9.0
+# System monitoring and performance
+psutil==7.0.0
+scipy==1.16.2

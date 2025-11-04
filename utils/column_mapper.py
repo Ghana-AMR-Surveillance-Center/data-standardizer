@@ -23,10 +23,10 @@ class ColumnMapper:
     def __init__(self):
         # Import standard fields from SchemaAnalyzer
         from .schema_analyzer import SchemaAnalyzer
-        from .mapping_history import MappingHistory
         self.standard_fields = SchemaAnalyzer.STANDARD_FIELDS
         self.target_schema = {field: {'type': 'text', 'required': True} for field in self.standard_fields}
-        self.mapping_history = MappingHistory()
+        # Simple in-memory mapping history (replaced MappingHistory class)
+        self.mapping_history = {}
     
     def show_mapping_interface(self, df: pd.DataFrame) -> tuple[Dict[str, str], bool]:
         """
@@ -49,7 +49,7 @@ class ColumnMapper:
         
         # Get suggested mappings from history first, then fallback to automatic suggestions
         source_columns = list(df.columns)
-        historical_mappings = self.mapping_history.get_suggested_mappings(source_columns)
+        historical_mappings = self._get_suggested_mappings(source_columns)
         suggested_mappings = historical_mappings or self._suggest_column_mappings(source_columns)
         
         # Show found mapping if available
@@ -70,7 +70,7 @@ class ColumnMapper:
         # Show history button
         if st.button("📚 View Mapping History"):
             st.write("#### Previous Mappings")
-            self.mapping_history.show_history_interface()
+            self._show_history_interface()
         
         # Add search/filter functionality
         search_term = st.text_input("🔍 Search fields", "")
@@ -210,7 +210,7 @@ class ColumnMapper:
             if st.button("✅ Apply Mappings", type="primary"):
                 # Save mappings to history when applied
                 if st.session_state.column_mappings:
-                    self.mapping_history.save_mapping(
+                    self._save_mapping(
                         source_columns=list(df.columns),
                         mappings=st.session_state.column_mappings
                     )
@@ -358,3 +358,28 @@ class ColumnMapper:
             mapped_df[col] = df[col]
             
         return mapped_df
+    
+    def _get_suggested_mappings(self, source_columns: List[str]) -> Optional[Dict[str, str]]:
+        """Get suggested mappings from history based on source columns."""
+        # Simple implementation - look for exact column name matches
+        suggestions = {}
+        for source_col in source_columns:
+            if source_col in self.mapping_history:
+                suggestions[source_col] = self.mapping_history[source_col]
+        return suggestions if suggestions else None
+    
+    def _show_history_interface(self):
+        """Show mapping history interface."""
+        if not self.mapping_history:
+            st.info("No mapping history available.")
+            return
+        
+        st.write("**Recent Mappings:**")
+        for source_col, target_col in self.mapping_history.items():
+            st.write(f"- {source_col} → {target_col}")
+    
+    def _save_mapping(self, source_columns: List[str], mappings: Dict[str, str]):
+        """Save mapping to history."""
+        for source_col, target_col in mappings.items():
+            if source_col in source_columns:
+                self.mapping_history[source_col] = target_col

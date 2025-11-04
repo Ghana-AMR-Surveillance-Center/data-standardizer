@@ -11,10 +11,7 @@ from pathlib import Path
 
 def main():
     """Main launcher function."""
-    print("=" * 60)
-    print("🏥 GLASS Data Standardizer v2.0.0")
-    print("=" * 60)
-    print("Production Ready - Data Processing & Standardization Platform")
+    print("🏥 GLASS Data Standardizer v2.0.0 - Production Ready")
     print("=" * 60)
     
     # Check Python version

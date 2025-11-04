@@ -93,19 +93,6 @@ def standardize_value(value: Any) -> Any:
         return value.strip()
     return value
 
-def detect_date_format(series: pd.Series) -> Optional[str]:
-    """
-    Detect the date format in a series.
-    
-    Args:
-        series: Series containing dates
-        
-    Returns:
-        Date format string or None if no consistent format found
-    """
-    # Implementation remains the same...
-    return None
-
 def parse_age_value(age_str: str) -> Tuple[Optional[float], str, str]:
     """
     Parse an age string into a numeric value and unit.
