@@ -78,6 +78,31 @@ class ProductionLogger:
         security_handler.setFormatter(security_formatter)
         self.logger.addHandler(security_handler)
     
+    # Passthrough convenience methods to behave like a standard logger
+    def debug(self, msg: str, *args, **kwargs):
+        self.logger.debug(msg, *args, **kwargs)
+    
+    def info(self, msg: str, *args, **kwargs):
+        self.logger.info(msg, *args, **kwargs)
+    
+    def warning(self, msg: str, *args, **kwargs):
+        self.logger.warning(msg, *args, **kwargs)
+    
+    def error(self, msg: str, *args, **kwargs):
+        self.logger.error(msg, *args, **kwargs)
+    
+    def critical(self, msg: str, *args, **kwargs):
+        self.logger.critical(msg, *args, **kwargs)
+    
+    def exception(self, msg: str, *args, **kwargs):
+        # Log an ERROR with exception info
+        kwargs.setdefault('exc_info', True)
+        self.logger.error(msg, *args, **kwargs)
+    
+    def __getattr__(self, name):
+        # Fallback: forward unknown attributes to underlying logger
+        return getattr(self.logger, name)
+    
     def log_request(self, method: str, endpoint: str, status_code: int, 
                    processing_time: float, user_ip: str = None, user_agent: str = None):
         """Log HTTP request"""
