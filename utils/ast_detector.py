@@ -142,9 +142,23 @@ class ASTDataDetector:
                 'fox', 'gen', 'mem', 'nal', 'oxy', 'pef', 'sxt', 'tcy', 'tmp', 'van'
             ]):
                 ast_columns.append(col)
+            # Columns that end with SIR (e.g., CiprofloxacinSIR)
+            elif col_lower.endswith('sir'):
+                ast_columns.append(col)
             # Check for resistance phenotype columns
             elif any(pattern in col_lower for pattern in ['resistance', 'susceptibility', 'phenotype']):
                 ast_columns.append(col)
+            else:
+                # Value-based detection for interpreted RSI columns regardless of name
+                try:
+                    series = df[col].dropna().astype(str).head(50).str.upper()
+                    if len(series) == 0:
+                        continue
+                    valid = series.isin(['R', 'S', 'I', 'RES', 'RESISTANT', 'SUSCEPTIBLE', 'SENSITIVE', 'INTERMEDIATE', 'INT'])
+                    if valid.mean() >= 0.6:
+                        ast_columns.append(col)
+                except Exception:
+                    pass
         
         return ast_columns
     

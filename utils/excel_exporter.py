@@ -10,6 +10,14 @@ import io
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+# Lazy import helpers
+def _get_glass_exporter():
+    try:
+        from . import glass_exporter
+        return glass_exporter
+    except Exception:
+        return None
+
 class ExcelExporter:
     """Handles data export operations with formatting."""
     """Handles data export operations with formatting."""
@@ -61,7 +69,17 @@ class ExcelExporter:
         # Export format selection
         export_format = st.selectbox(
             "Select Export Format",
-            options=["Excel (XLSX)", "CSV", "Excel (XLS)", "TSV", "JSON", "XML"],
+            options=[
+                "Excel (XLSX)",
+                "CSV",
+                "Excel (XLS)",
+                "TSV",
+                "JSON",
+                "XML",
+                "WHO GLASS (CSV)",
+                "WHO GLASS (JSON)",
+                "WHONET (CSV)"
+            ],
             help="Choose the format for your exported data"
         )
         
@@ -72,7 +90,10 @@ class ExcelExporter:
             "Excel (XLS)": ".xls",
             "TSV": ".tsv",
             "JSON": ".json",
-            "XML": ".xml"
+            "XML": ".xml",
+            "WHO GLASS (CSV)": ".csv",
+            "WHO GLASS (JSON)": ".json",
+            "WHONET (CSV)": ".csv",
         }[export_format]
         
         filename = st.text_input(
@@ -117,20 +138,44 @@ class ExcelExporter:
                 "CSV": "text/csv",
                 "TSV": "text/tab-separated-values",
                 "JSON": "application/json",
-                "XML": "application/xml"
+                "XML": "application/xml",
+                "WHO GLASS (CSV)": "text/csv",
+                "WHO GLASS (JSON)": "application/json",
+                "WHONET (CSV)": "text/csv",
             }
             
             # Default sheet name for Excel formats
             sheet_name_val = sheet_name if "Excel" in export_format else "Sheet1"
             
             # Create the export file
-            file_data = self._create_export_file(
-                df,
-                validation_results if include_validation else None,
-                sheet_name_val,
-                freeze_header,
-                export_format
-            )
+            if export_format in ("WHO GLASS (CSV)", "WHO GLASS (JSON)"):
+                glass = _get_glass_exporter()
+                if not glass:
+                    st.error("WHO GLASS export not available (module missing)")
+                    return
+                glass_df = glass.build_glass_export(df)
+                if export_format == "WHO GLASS (CSV)":
+                    file_data = glass.to_glass_csv_bytes(glass_df)
+                else:
+                    file_data = glass.to_glass_json_bytes(glass_df)
+            elif export_format == "WHONET (CSV)":
+                try:
+                    from .glass_exporter import build_glass_export
+                    from .whonet_exporter import build_whonet_wide
+                    glass_df = build_glass_export(df)
+                    whonet_df = build_whonet_wide(glass_df)
+                    file_data = whonet_df.to_csv(index=False).encode("utf-8")
+                except Exception as ex:
+                    st.error(f"WHONET export failed: {str(ex)}")
+                    return
+            else:
+                file_data = self._create_export_file(
+                    df,
+                    validation_results if include_validation else None,
+                    sheet_name_val,
+                    freeze_header,
+                    export_format
+                )
             
             # Show download button
             st.download_button(

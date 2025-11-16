@@ -99,6 +99,13 @@ class FileMerger:
                     except Exception:
                         # Fallback to default engine
                         df = pd.read_excel(file)
+            # Standardize columns and strip whitespace
+            try:
+                from .helpers import standardize_dataframe_columns, strip_object_whitespace
+                df = standardize_dataframe_columns(df)
+                df = strip_object_whitespace(df)
+            except Exception:
+                pass
             
             # Calculate basic statistics efficiently
             validation['stats'] = {

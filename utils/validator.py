@@ -3,7 +3,6 @@ Validator Module
 Handles data validation and quality checks.
 """
 
-import streamlit as st
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Any, Optional
@@ -221,55 +220,29 @@ class DataValidator:
         
         return results
     
-    def show_validation_results(self, results: Dict[str, Any]) -> None:
+    def get_validation_summary(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Display validation results in Streamlit.
+        Get validation summary for display (framework-agnostic).
         
         Args:
             results: Validation results dictionary
+            
+        Returns:
+            Dict containing summary information
         """
         if not results:
-            st.warning("No validation results available")
-            return
+            return {
+                'total_errors': 0,
+                'total_warnings': 0,
+                'errors': [],
+                'warnings': [],
+                'column_stats': {}
+            }
         
-        # Show summary
-        st.write("### Validation Summary")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Total Errors", results['summary']['total_errors'])
-        with col2:
-            st.metric("Total Warnings", results['summary']['total_warnings'])
-        
-        # Show errors
-        if results['errors']:
-            st.write("### Errors")
-            for error in results['errors']:
-                error_message = []
-                if 'message' in error:
-                    error_message.append(error['message'])
-                if 'type' in error:
-                    error_message.append(f"Type: {error['type']}")
-                if 'rows' in error:
-                    error_message.append(f"Affected rows: {len(error['rows'])}")
-                st.error("\n".join(error_message))
-        
-        # Show warnings
-        if results['warnings']:
-            st.write("### Warnings")
-            for warning in results['warnings']:
-                warning_message = []
-                if 'message' in warning:
-                    warning_message.append(warning['message'])
-                if 'type' in warning:
-                    warning_message.append(f"Type: {warning['type']}")
-                if 'rows' in warning:
-                    warning_message.append(f"Affected rows: {len(warning['rows'])}")
-                st.warning("\n".join(warning_message))
-        
-        # Show column statistics
-        st.write("### Column Statistics")
-        stats_df = pd.DataFrame.from_dict(
-            results['column_stats'],
-            orient='index'
-        )
-        st.dataframe(stats_df, use_container_width=True)
+        return {
+            'total_errors': results['summary']['total_errors'],
+            'total_warnings': results['summary']['total_warnings'],
+            'errors': results['errors'],
+            'warnings': results['warnings'],
+            'column_stats': results['column_stats']
+        }

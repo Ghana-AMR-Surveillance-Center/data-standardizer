@@ -72,6 +72,35 @@ class ColumnMapper:
             st.write("#### Previous Mappings")
             self._show_history_interface()
         
+        # Save/Load mapping template
+        st.write("#### Mapping Templates")
+        col_t1, col_t2 = st.columns([1, 1])
+        with col_t1:
+            if st.button("Download Current Mapping Template"):
+                import json
+                payload = {
+                    "mappings": st.session_state.column_mappings,
+                    "custom_fields": list(st.session_state.get('custom_fields', [])),
+                }
+                st.download_button(
+                    label="📥 Save mapping.json",
+                    data=json.dumps(payload, indent=2).encode('utf-8'),
+                    file_name="mapping_template.json",
+                    mime="application/json"
+                )
+        with col_t2:
+            uploaded_template = st.file_uploader("Upload mapping template (.json)", type=["json"], key="mapping_template_upl")
+            if uploaded_template is not None:
+                try:
+                    import json
+                    data = json.loads(uploaded_template.read().decode('utf-8'))
+                    st.session_state.column_mappings = data.get("mappings", {})
+                    st.session_state.custom_fields = set(data.get("custom_fields", []))
+                    st.success("Mapping template loaded")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"Failed to load mapping template: {str(ex)}")
+
         # Add search/filter functionality
         search_term = st.text_input("🔍 Search fields", "")
         

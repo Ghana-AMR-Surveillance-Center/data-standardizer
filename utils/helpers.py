@@ -265,6 +265,92 @@ def detect_date_format(series: pd.Series) -> Optional[str]:
     
     return None
 
+def _normalize_label(label: str) -> str:
+    """Trim and collapse internal whitespace in a column label."""
+    try:
+        s = str(label).strip()
+        # Replace multiple spaces/tabs with single space
+        s = s.replace("_", " ").replace("-", " ")
+        s = " ".join(s.split())
+        return s
+    except Exception:
+        return str(label)
+
+CANONICAL_COLUMNS = {
+    # Organism
+    'organism': 'Organism',
+    'organism name': 'Organism',
+    'bacterial name': 'Organism',
+    'organism_code': 'Organism',
+    # Specimen date synonyms
+    'specimen date': 'Specimen date',
+    'collection date': 'Specimen date',
+    'date collected': 'Specimen date',
+    'sample date': 'Specimen date',
+    'received date': 'Specimen date',
+    # Specimen type synonyms
+    'specimen type': 'Specimen type',
+    'sample type': 'Specimen type',
+    'specimen': 'Specimen type',
+    # Gender/Sex
+    'gender': 'Gender',
+    'sex': 'Gender',
+    # Age
+    'age in years': 'Age in years',
+    'age': 'Age in years',
+    'patient age': 'Age in years',
+    # Patient type / location type
+    'location type': 'Location type',
+    'patient type': 'Location type',
+    'inpatient outpatient': 'Location type',
+    # Department / ward
+    'department': 'Department',
+    'ward': 'Department',
+    'ward name': 'Department',
+    'unit': 'Department',
+    # Country
+    'country': 'Country',
+    'country name': 'Country',
+    'country code': 'Country',
+    # IDs (optional mappings retained to user-visible names)
+    'patient id': 'Patient_ID',
+    'patient identifier': 'Patient_ID',
+    'unique id': 'Unique ID',
+    'specimen number': 'Specimen number',
+    'specimen id': 'Specimen number',
+}
+
+def standardize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Standardize dataframe columns:
+    - strip leading/trailing whitespace
+    - collapse internal whitespace
+    - map known names to canonical casing
+    """
+    try:
+        new_cols = {}
+        for c in df.columns:
+            base = _normalize_label(c)
+            key = " ".join(base.lower().split())
+            canonical = CANONICAL_COLUMNS.get(key, base)
+            new_cols[c] = canonical
+        df = df.rename(columns=new_cols)
+        return df
+    except Exception:
+        return df
+
+def strip_object_whitespace(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Strip leading/trailing whitespace from all object/string columns.
+    """
+    try:
+        obj_cols = df.select_dtypes(include=['object']).columns
+        for c in obj_cols:
+            df[c] = df[c].apply(lambda x: x.strip() if isinstance(x, str) else x)
+        return df
+    except Exception:
+        return df
+
 def is_categorical(series: pd.Series, threshold: float = 0.05) -> bool:
     """
     Check if a series appears to be categorical.

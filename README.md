@@ -3,7 +3,7 @@
 **Advanced Data Processing & Standardization Platform**
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io)
+[![Dash](https://img.shields.io/badge/Dash-2.17%2B-blue)](https://dash.plotly.com)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ## 🚀 Quick Start
@@ -35,9 +35,10 @@ pip install -r requirements.txt
 python run.py
 ```
 
-### Option 3: Direct Run
+### Option 3: Docker (Recommended for Production)
 ```bash
-python -m streamlit run app.py --server.port 8501
+docker compose up -d
+# Access at http://localhost:8501
 ```
 
 ## 📋 System Requirements
@@ -77,38 +78,30 @@ python -m streamlit run app.py --server.port 8501
 
 ```
 data-standardizer/
-├── app.py                 # Main Streamlit application
-├── run.py                 # Production launcher
-├── setup.py              # Environment setup script
-├── start.bat             # Windows launcher
-├── requirements.txt      # Python dependencies
-├── README.md             # This file
-├── .gitignore           # Git ignore rules
-├── data/                 # Data directory
-│   └── .gitkeep         # Directory placeholder
+├── dash_app.py           # Main Dash application
+├── api/                  # FastAPI REST API
+│   └── app.py           # API endpoints
+├── core/                 # Core services
+│   ├── services/        # Business logic services
+│   ├── schemas.py       # Pydantic data models
+│   ├── tasks.py         # Background job tasks
+│   └── jobs.py          # Job queue management
+├── jobs/                 # Background workers
+│   └── worker.py        # RQ worker
 ├── utils/                # Core utility modules
-│   ├── amr_analytics.py  # AMR analysis engine (CLSI compliant)
-│   ├── amr_interface.py  # AMR analytics interface
-│   ├── app_config.py     # Configuration management
-│   ├── app_settings.py   # Enhanced settings management
-│   ├── ast_detector.py   # AST data type detection
-│   ├── cache_manager.py  # Advanced caching system
-│   ├── column_mapper.py  # Intelligent column mapping
-│   ├── data_profiler.py  # Data profiling and analysis
-│   ├── data_quality.py   # Data quality assessment
-│   ├── error_handler.py  # Error handling system
-│   ├── excel_exporter.py # Multi-format export
-│   ├── file_handler.py   # File processing
-│   ├── file_merger.py    # File merging logic
-│   ├── helpers.py        # Helper functions
-│   ├── logger.py         # Logging system
-│   ├── performance_monitor.py # Performance monitoring
+│   ├── ast_detector.py  # AST data type detection
+│   ├── glass_exporter.py # WHO GLASS export
+│   ├── whonet_exporter.py # WHONET export
+│   ├── glass_validator.py # GLASS validation
+│   ├── breakpoint_interpreter.py # S/I/R interpretation
+│   ├── vocabularies.py  # Controlled vocabularies
 │   ├── schema_analyzer.py # Schema analysis
-│   ├── transformer.py    # Data transformation
-│   ├── user_feedback.py  # Enhanced user feedback system
-│   └── validator.py      # Validation logic
-└── deployment/           # Deployment documentation
-    └── README.md         # Deployment guide
+│   └── validator.py     # Data validation
+├── tests/               # Unit and integration tests
+├── requirements.txt     # Python dependencies
+├── docker-compose.yml   # Docker Compose configuration
+├── Dockerfile          # Docker image definition
+└── README.md          # This file
 ```
 
 ## 🔧 Usage
@@ -162,7 +155,7 @@ The application uses a centralized configuration system:
 
 3. **Port Already in Use**
    - Kill existing processes: `taskkill /f /im python.exe`
-   - Or use different port: `streamlit run app.py --server.port 8502`
+   - Or change port in `docker-compose.yml` or `dash_app.py`
 
 4. **Virtual Environment Issues**
    - Delete .venv folder and run setup.py again

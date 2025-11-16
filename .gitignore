@@ -103,6 +103,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+.secrets/*
 .venv
 env/
 venv/
@@ -163,7 +165,21 @@ data/*.xlsx
 data/*.csv
 data/*.xls
 !data/.gitkeep
+data/*.json
+data/*.parquet
+artifacts/
+reports/
 
 # Backup files
 *.bak
 *.backup
+
+# Node (if any UI experiments)
+node_modules/
+
+# Docker
+.docker/
+
+# Coverage artifacts
+.coverage*
+coverage/

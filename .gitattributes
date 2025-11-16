@@ -1,0 +1,16 @@
+# Normalize line endings
+* text=auto eol=lf
+
+# Treat common large/binary assets appropriately
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.xlsx binary
+*.xls binary
+*.zip binary
+
+# Linguist hints (optional)
+docs/* linguist-documentation
+

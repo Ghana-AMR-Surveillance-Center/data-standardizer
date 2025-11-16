@@ -73,6 +73,9 @@ class FileHandler:
             try:
                 uploaded_file.seek(0)  # Reset file pointer
                 df = pd.read_csv(uploaded_file, encoding=encoding)
+                from .helpers import standardize_dataframe_columns, strip_object_whitespace
+                df = standardize_dataframe_columns(df)
+                df = strip_object_whitespace(df)
                 st.success(f"File loaded successfully with {encoding} encoding")
                 return df
             except UnicodeDecodeError:
@@ -98,6 +101,9 @@ class FileHandler:
             uploaded_file.seek(0)
             # Read Excel file
             df = pd.read_excel(uploaded_file, engine='openpyxl')
+            from .helpers import standardize_dataframe_columns, strip_object_whitespace
+            df = standardize_dataframe_columns(df)
+            df = strip_object_whitespace(df)
             st.success("Excel file loaded successfully")
             return df
         except Exception as e:
@@ -106,6 +112,9 @@ class FileHandler:
             try:
                 uploaded_file.seek(0)
                 df = pd.read_excel(uploaded_file, engine='xlrd')
+                from .helpers import standardize_dataframe_columns, strip_object_whitespace
+                df = standardize_dataframe_columns(df)
+                df = strip_object_whitespace(df)
                 st.success("Excel file loaded successfully with xlrd engine")
                 return df
             except Exception as e2:
