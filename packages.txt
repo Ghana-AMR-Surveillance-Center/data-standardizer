@@ -1,5 +1,0 @@
-# System packages for Streamlit Cloud (if needed)
-# Add system-level packages here if required
-# Example:
-# libgomp1
-
