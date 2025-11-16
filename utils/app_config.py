@@ -200,3 +200,7 @@ class AppConfig:
 
 # Global config instance
 app_config = AppConfig()
+
+def get_config():
+    """Get the global configuration instance"""
+    return app_config

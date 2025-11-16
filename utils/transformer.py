@@ -1,14 +1,17 @@
 """
 Data Transformer Module
-Handles data transformation operations.
+Handles data transformation operations with flexible AMR data cleaning capabilities.
 """
 
 import streamlit as st
 import pandas as pd
-from typing import Dict, List, Any, Optional
+import numpy as np
+import re
+from typing import Dict, List, Any, Optional, Callable, Union, Tuple
+from datetime import datetime
 
 class DataTransformer:
-    """Handles data transformation operations."""
+    """Handles data transformation operations with flexible AMR data cleaning."""
     
     def __init__(self):
         from .age_transformer import AgeTransformer
@@ -34,6 +37,429 @@ class DataTransformer:
                 'extract_day': lambda x: pd.to_datetime(x).dt.day
             }
         }
+        
+        # Initialize flexible cleaning strategies
+        self.cleaning_strategies = self._initialize_cleaning_strategies()
+    
+    def _initialize_cleaning_strategies(self) -> Dict[str, Dict[str, Any]]:
+        """Initialize flexible cleaning strategies for different AMR data formats."""
+        return {
+            'organism': {
+                'patterns': [
+                    (r'^e\.?\s*coli$', 'E. coli', re.IGNORECASE),
+                    (r'^s\.?\s*aureus$', 'S. aureus', re.IGNORECASE),
+                    (r'^k\.?\s*pneumoniae$', 'K. pneumoniae', re.IGNORECASE),
+                    (r'^p\.?\s*aeruginosa$', 'P. aeruginosa', re.IGNORECASE),
+                    (r'escherichia\s+coli', 'E. coli', re.IGNORECASE),
+                    (r'staphylococcus\s+aureus', 'S. aureus', re.IGNORECASE),
+                    (r'klebsiella\s+pneumoniae', 'K. pneumoniae', re.IGNORECASE),
+                    (r'pseudomonas\s+aeruginosa', 'P. aeruginosa', re.IGNORECASE),
+                ],
+                'invalid_values': ['xxx', 'test', 'no growth', 'contamination', 'na', 'n/a', 'not applicable'],
+                'normalize_case': True,
+                'remove_extra_spaces': True
+            },
+            'antimicrobial_result': {
+                'mappings': {
+                    's': 'S', 'susceptible': 'S', 'susceptibility': 'S',
+                    'r': 'R', 'resistant': 'R', 'resistance': 'R',
+                    'i': 'I', 'intermediate': 'I', 'indeterminate': 'I',
+                    'nd': 'ND', 'not determined': 'ND', 'not done': 'ND',
+                    'nm': 'NM', 'not measured': 'NM', 'na': 'ND'
+                },
+                'normalize_case': True,
+                'strip_whitespace': True
+            },
+            'specimen_type': {
+                'mappings': {
+                    'bld': 'Blood', 'bl': 'Blood', 'blood': 'Blood', 'whole blood': 'Blood',
+                    'ur': 'Urine', 'urine': 'Urine', 'urine sample': 'Urine',
+                    'sput': 'Sputum', 'sputum': 'Sputum', 'sputum sample': 'Sputum',
+                    'csf': 'CSF', 'cerebrospinal fluid': 'CSF',
+                    'wound': 'Wound', 'swab': 'Swab',
+                    'stool': 'Stool', 'feces': 'Stool'
+                },
+                'normalize_case': True,
+                'title_case_fallback': True
+            },
+            'gender': {
+                'mappings': {
+                    'male': 'M', 'm': 'M', 'man': 'M',
+                    'female': 'F', 'f': 'F', 'woman': 'F',
+                    'other': 'O', 'o': 'O',
+                    'unknown': 'U', 'u': 'U', 'unspecified': 'U'
+                },
+                'normalize_case': True,
+                'first_char_fallback': True
+            },
+            'date': {
+                'formats': [
+                    '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y',
+                    '%d.%m.%Y', '%Y/%m/%d', '%d %m %Y', '%Y %m %d'
+                ],
+                'infer_datetime': True,
+                'handle_timezone': True
+            },
+            'age': {
+                'extract_patterns': [
+                    r'(\d+)\s*years?',
+                    r'(\d+)\s*yrs?',
+                    r'(\d+)\s*yo',
+                    r'age[:\s]*(\d+)',
+                    r'(\d+)'
+                ],
+                'valid_range': (0, 120),
+                'extract_from_text': True
+            },
+            'numeric': {
+                'handle_scientific_notation': True,
+                'handle_decimal_separators': ['.', ','],
+                'remove_commas': True,
+                'extract_from_text': True
+            }
+        }
+    
+    def flexible_clean_column(self, df: pd.DataFrame, column_name: str, 
+                             strategy: str, custom_mappings: Optional[Dict] = None) -> pd.DataFrame:
+        """
+        Flexibly clean a column using predefined or custom strategies.
+        
+        Args:
+            df: Input dataframe
+            column_name: Name of column to clean
+            strategy: Cleaning strategy ('organism', 'antimicrobial_result', 'specimen_type', 
+                     'gender', 'date', 'age', 'numeric', 'custom')
+            custom_mappings: Custom mappings for 'custom' strategy
+            
+        Returns:
+            DataFrame with cleaned column
+        """
+        from .column_utils import find_column_case_insensitive
+        
+        actual_col = find_column_case_insensitive(df, column_name)
+        if actual_col is None:
+            return df
+        
+        df_cleaned = df.copy()
+        
+        # Get the actual column as Series to avoid type issues
+        # Ensure we have a Series, not DataFrame
+        if isinstance(df_cleaned[actual_col], pd.Series):
+            col_series = df_cleaned[actual_col]
+        else:
+            # Fallback: convert to Series if needed
+            col_series = pd.Series(df_cleaned[actual_col])
+        
+        if strategy == 'organism':
+            df_cleaned[actual_col] = self._clean_organism_column(col_series)
+        elif strategy == 'antimicrobial_result':
+            df_cleaned[actual_col] = self._clean_antimicrobial_column(col_series)
+        elif strategy == 'specimen_type':
+            df_cleaned[actual_col] = self._clean_specimen_column(col_series)
+        elif strategy == 'gender':
+            df_cleaned[actual_col] = self._clean_gender_column(col_series)
+        elif strategy == 'date':
+            df_cleaned[actual_col] = self._clean_date_column(col_series)
+        elif strategy == 'age':
+            df_cleaned[actual_col] = self._clean_age_column(col_series)
+        elif strategy == 'numeric':
+            df_cleaned[actual_col] = self._clean_numeric_column(col_series)
+        elif strategy == 'custom' and custom_mappings:
+            df_cleaned[actual_col] = self._clean_with_custom_mappings(col_series, custom_mappings)
+        else:
+            # Default: strip whitespace and normalize case
+            df_cleaned[actual_col] = df_cleaned[actual_col].astype(str).str.strip().str.title()
+        
+        return df_cleaned
+    
+    def _clean_organism_column(self, series: pd.Series) -> pd.Series:
+        """Clean organism names using pattern matching and normalization."""
+        strategy = self.cleaning_strategies['organism']
+        
+        def clean_organism(value):
+            if pd.isna(value):
+                return value
+            
+            value_str = str(value).strip()
+            
+            # Check for invalid values
+            if value_str.lower() in [v.lower() for v in strategy['invalid_values']]:
+                return None
+            
+            # Apply pattern matching
+            for pattern, replacement, flags in strategy['patterns']:
+                if re.match(pattern, value_str, flags):
+                    return replacement
+            
+            # Normalize case and spacing
+            if strategy['normalize_case']:
+                value_str = value_str.title()
+            if strategy['remove_extra_spaces']:
+                value_str = re.sub(r'\s+', ' ', value_str).strip()
+            
+            return value_str
+        
+        return series.apply(clean_organism)
+    
+    def _clean_antimicrobial_column(self, series: pd.Series) -> pd.Series:
+        """Clean antimicrobial results using mappings."""
+        strategy = self.cleaning_strategies['antimicrobial_result']
+        
+        def clean_result(value):
+            if pd.isna(value):
+                return value
+            
+            value_str = str(value)
+            if strategy['strip_whitespace']:
+                value_str = value_str.strip()
+            if strategy['normalize_case']:
+                value_str = value_str.lower()
+            
+            return strategy['mappings'].get(value_str, value_str.upper() if len(value_str) == 1 else value_str)
+        
+        return series.apply(clean_result)
+    
+    def _clean_specimen_column(self, series: pd.Series) -> pd.Series:
+        """Clean specimen types using mappings."""
+        strategy = self.cleaning_strategies['specimen_type']
+        
+        def clean_specimen(value):
+            if pd.isna(value):
+                return value
+            
+            value_str = str(value)
+            if strategy['normalize_case']:
+                value_str = value_str.lower().strip()
+            
+            result = strategy['mappings'].get(value_str, None)
+            if result:
+                return result
+            
+            # Fallback to title case
+            if strategy.get('title_case_fallback', False):
+                return value_str.title()
+            
+            return value_str
+        
+        return series.apply(clean_specimen)
+    
+    def _clean_gender_column(self, series: pd.Series) -> pd.Series:
+        """Clean gender values using mappings."""
+        strategy = self.cleaning_strategies['gender']
+        
+        def clean_gender(value):
+            if pd.isna(value):
+                return 'U'
+            
+            value_str = str(value)
+            if strategy['normalize_case']:
+                value_str = value_str.lower().strip()
+            
+            result = strategy['mappings'].get(value_str, None)
+            if result:
+                return result
+            
+            # Fallback to first character
+            if strategy.get('first_char_fallback', False) and len(value_str) > 0:
+                return value_str[0].upper()
+            
+            return value_str.upper()[:1] if len(value_str) > 0 else 'U'
+        
+        return series.apply(clean_gender)
+    
+    def _clean_date_column(self, series: pd.Series) -> pd.Series:
+        """Clean date columns with multiple format support."""
+        strategy = self.cleaning_strategies['date']
+        
+        # Try pandas to_datetime with multiple formats
+        if strategy['infer_datetime']:
+            try:
+                return pd.to_datetime(series, errors='coerce', infer_datetime_format=True)
+            except:
+                pass
+        
+        # Try specific formats
+        for fmt in strategy['formats']:
+            try:
+                result = pd.to_datetime(series, format=fmt, errors='coerce')
+                if result.notna().sum() > len(series) * 0.5:  # If >50% success, use this format
+                    return result
+            except:
+                continue
+        
+        # Final fallback
+        return pd.to_datetime(series, errors='coerce')
+    
+    def _clean_age_column(self, series: pd.Series) -> pd.Series:
+        """Clean age values extracting numbers from various formats."""
+        strategy = self.cleaning_strategies['age']
+        
+        def clean_age(value):
+            if pd.isna(value):
+                return None
+            
+            # Try direct numeric conversion
+            try:
+                age = float(value)
+                if strategy['valid_range'][0] <= age <= strategy['valid_range'][1]:
+                    return age
+            except (ValueError, TypeError):
+                pass
+            
+            # Try pattern extraction
+            if strategy.get('extract_from_text', False):
+                value_str = str(value).lower()
+                for pattern in strategy['extract_patterns']:
+                    match = re.search(pattern, value_str)
+                    if match:
+                        try:
+                            age = float(match.group(1))
+                            if strategy['valid_range'][0] <= age <= strategy['valid_range'][1]:
+                                return age
+                        except:
+                            continue
+            
+            return None
+        
+        return series.apply(clean_age)
+    
+    def _clean_numeric_column(self, series: pd.Series) -> pd.Series:
+        """Clean numeric columns handling various formats."""
+        strategy = self.cleaning_strategies['numeric']
+        
+        def clean_numeric(value):
+            if pd.isna(value):
+                return None
+            
+            value_str = str(value)
+            
+            # Remove commas
+            if strategy.get('remove_commas', False):
+                value_str = value_str.replace(',', '')
+            
+            # Handle decimal separators
+            if strategy.get('handle_decimal_separators'):
+                # Replace comma with dot if it's likely a decimal separator
+                if ',' in value_str and '.' not in value_str:
+                    value_str = value_str.replace(',', '.')
+            
+            # Try direct conversion
+            try:
+                return float(value_str)
+            except ValueError:
+                pass
+            
+            # Extract from text
+            if strategy.get('extract_from_text', False):
+                numbers = re.findall(r'[\d.]+', value_str)
+                if numbers:
+                    try:
+                        return float(numbers[0])
+                    except:
+                        pass
+            
+            return None
+        
+        return series.apply(clean_numeric)
+    
+    def _clean_with_custom_mappings(self, series: pd.Series, mappings: Dict) -> pd.Series:
+        """Clean column using custom mappings."""
+        def clean_value(value):
+            if pd.isna(value):
+                return value
+            
+            value_str = str(value).strip().lower()
+            return mappings.get(value_str, value)
+        
+        return series.apply(clean_value)
+    
+    def auto_detect_and_clean_amr_data(self, df: pd.DataFrame, 
+                                      auto_apply: bool = False) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+        """
+        Automatically detect AMR data columns and apply appropriate cleaning strategies.
+        
+        Args:
+            df: Input dataframe
+            auto_apply: Whether to automatically apply cleaning
+            
+        Returns:
+            Tuple of (cleaned dataframe, detection report)
+        """
+        from .column_utils import normalize_column_name
+        
+        detection_report = {
+            'detected_columns': {},
+            'suggested_cleanings': [],
+            'confidence_scores': {}
+        }
+        
+        df_cleaned = df.copy()
+        
+        # Detect organism columns
+        for col in df.columns:
+            col_normalized = normalize_column_name(col)
+            
+            # Organism detection
+            if any(term in col_normalized for term in ['organism', 'bacteria', 'isolate', 'pathogen']):
+                detection_report['detected_columns'][col] = {
+                    'type': 'organism',
+                    'strategy': 'organism',
+                    'confidence': 0.9
+                }
+                if auto_apply:
+                    df_cleaned = self.flexible_clean_column(df_cleaned, col, 'organism')
+            
+            # Antimicrobial result detection
+            elif any(term in col_normalized for term in ['sir', 'susceptibility', 'resistance', 'result']):
+                detection_report['detected_columns'][col] = {
+                    'type': 'antimicrobial_result',
+                    'strategy': 'antimicrobial_result',
+                    'confidence': 0.85
+                }
+                if auto_apply:
+                    df_cleaned = self.flexible_clean_column(df_cleaned, col, 'antimicrobial_result')
+            
+            # Specimen type detection
+            elif 'specimen' in col_normalized and 'type' in col_normalized:
+                detection_report['detected_columns'][col] = {
+                    'type': 'specimen_type',
+                    'strategy': 'specimen_type',
+                    'confidence': 0.9
+                }
+                if auto_apply:
+                    df_cleaned = self.flexible_clean_column(df_cleaned, col, 'specimen_type')
+            
+            # Gender detection
+            elif any(term in col_normalized for term in ['gender', 'sex']):
+                detection_report['detected_columns'][col] = {
+                    'type': 'gender',
+                    'strategy': 'gender',
+                    'confidence': 0.9
+                }
+                if auto_apply:
+                    df_cleaned = self.flexible_clean_column(df_cleaned, col, 'gender')
+            
+            # Date detection
+            elif 'date' in col_normalized:
+                detection_report['detected_columns'][col] = {
+                    'type': 'date',
+                    'strategy': 'date',
+                    'confidence': 0.85
+                }
+                if auto_apply:
+                    df_cleaned = self.flexible_clean_column(df_cleaned, col, 'date')
+            
+            # Age detection
+            elif 'age' in col_normalized:
+                detection_report['detected_columns'][col] = {
+                    'type': 'age',
+                    'strategy': 'age',
+                    'confidence': 0.85
+                }
+                if auto_apply:
+                    df_cleaned = self.flexible_clean_column(df_cleaned, col, 'age')
+        
+        return df_cleaned, detection_report
     
     def show_transformation_interface(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -76,6 +502,103 @@ class DataTransformer:
         if current_count != original_count or operations_count > 0:
             st.info(f"📊 Dataset Status: {len(df)} rows × {current_count} columns "
                    f"(Started with {original_count} columns, {operations_count} operations applied)")
+        
+        # Add flexible AMR data cleaning section
+        st.write("---")
+        st.write("#### 🧹 Flexible AMR Data Cleaning")
+        st.markdown("""
+        **Automatically detect and clean AMR-specific data columns:**
+        - Organism names (standardize variations like "E. coli", "e coli", "E.coli")
+        - Antimicrobial results (S/R/I/ND/NM standardization)
+        - Specimen types (Blood, Urine, Sputum, etc.)
+        - Gender values (M/F/O/U standardization)
+        - Date formats (multiple format support)
+        - Age values (extract from various text formats)
+        """)
+        
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            auto_clean_enabled = st.checkbox(
+                "Enable automatic AMR data detection and cleaning",
+                value=False,
+                help="Automatically detect AMR columns and apply appropriate cleaning strategies"
+            )
+        with col2:
+            if st.button("🔍 Detect AMR Columns", help="Detect AMR-specific columns without applying cleaning"):
+                cleaned_df, detection_report = self.auto_detect_and_clean_amr_data(df, auto_apply=False)
+                st.session_state['amr_detection_report'] = detection_report
+                st.success(f"✅ Detected {len(detection_report['detected_columns'])} AMR columns")
+                
+                # Show detection results
+                if detection_report['detected_columns']:
+                    with st.expander("📋 View Detected Columns", expanded=True):
+                        for col_name, info in detection_report['detected_columns'].items():
+                            st.write(f"**{col_name}**: {info['type']} (confidence: {info['confidence']:.0%})")
+        
+        if auto_clean_enabled:
+            if st.button("✨ Apply Automatic Cleaning", type="primary"):
+                with st.spinner("Cleaning AMR data..."):
+                    cleaned_df, detection_report = self.auto_detect_and_clean_amr_data(df, auto_apply=True)
+                    st.session_state['processed_data'] = cleaned_df
+                    st.session_state['amr_detection_report'] = detection_report
+                    
+                    # Track operation
+                    if 'operations_applied' not in st.session_state['transformation_state']:
+                        st.session_state['transformation_state']['operations_applied'] = []
+                    st.session_state['transformation_state']['operations_applied'].append(
+                        f"Automatic AMR cleaning ({len(detection_report['detected_columns'])} columns)"
+                    )
+                    
+                    st.success(f"✅ Cleaned {len(detection_report['detected_columns'])} AMR columns")
+                    st.rerun()
+        
+        # Manual column cleaning section
+        st.write("---")
+        st.write("#### 🎯 Manual Column Cleaning")
+        st.markdown("**Select specific columns and cleaning strategies:**")
+        
+        selected_col = st.selectbox(
+            "Select column to clean",
+            options=[''] + list(df.columns),
+            help="Choose a column to apply specific cleaning strategy"
+        )
+        
+        if selected_col:
+            strategy = st.selectbox(
+                "Select cleaning strategy",
+                options=['organism', 'antimicrobial_result', 'specimen_type', 'gender', 'date', 'age', 'numeric', 'custom'],
+                help="Choose the appropriate cleaning strategy for this column"
+            )
+            
+            custom_mappings = None
+            if strategy == 'custom':
+                st.write("**Define custom mappings (one per line, format: old_value=new_value):**")
+                mappings_text = st.text_area(
+                    "Custom mappings",
+                    height=100,
+                    help="Example:\nmale=M\nfemale=F\nother=O"
+                )
+                if mappings_text:
+                    try:
+                        custom_mappings = {}
+                        for line in mappings_text.strip().split('\n'):
+                            if '=' in line:
+                                key, value = line.split('=', 1)
+                                custom_mappings[key.strip().lower()] = value.strip()
+                    except:
+                        st.error("Invalid mapping format. Use: key=value")
+            
+            if st.button(f"🧹 Clean '{selected_col}' Column"):
+                df = self.flexible_clean_column(df, selected_col, strategy, custom_mappings)
+                st.session_state['processed_data'] = df
+                st.success(f"✅ Cleaned column '{selected_col}' using {strategy} strategy")
+                
+                # Show preview
+                st.write("**Preview of cleaned column:**")
+                st.dataframe(df[[selected_col]].head(10), use_container_width=True)
+                st.rerun()
+        
+        st.write("---")
             
         # Add number extraction section
         st.write("#### Extract Numbers")
@@ -276,8 +799,7 @@ class DataTransformer:
                     # Show success message with details
                     st.success(f"✅ Successfully deleted {len(columns_to_delete)} column(s)")
                     
-                    # Debug info to verify the fix
-                    st.info(f"🔍 Debug: Session state now has {len(st.session_state['processed_data'].columns)} columns")
+                    # Update successful - no debug message needed in production
                     
                     # Track operation
                     if 'operations_applied' not in st.session_state['transformation_state']:

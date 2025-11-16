@@ -1,4 +1,4 @@
-# GLASS Data Standardizer - Production Dependencies
+# GLASS Data Standardizer v2.0.0 - Production Dependencies
 # Core application dependencies
 streamlit>=1.28.0
 pandas>=1.5.0
@@ -11,10 +11,15 @@ xlrd>=2.0.0,<3.0.0
 
 # Data visualization and analysis
 plotly>=5.8.0
-scikit-learn>=1.0.0
+
+# AMR Analytics dependencies
+kaleido>=0.2.1
+seaborn>=0.11.0
+matplotlib>=3.5.0
 
 # Text processing and similarity
 python-Levenshtein>=0.21.0
 
-# System monitoring (optional)
+# System monitoring and performance
 psutil>=5.9.0
+scipy>=1.9.0
