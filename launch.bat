@@ -24,7 +24,7 @@ echo 🔗 URL: http://localhost:8501
 echo ⏹️  Press Ctrl+C to stop the application
 echo --------------------------------------------------
 
-REM Launch the application
-python run.py
+REM Launch the application using python -m streamlit (fixes venv path issues)
+python -m streamlit run app.py --server.port 8501 --server.headless false --browser.gatherUsageStats false
 
 pause
