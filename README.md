@@ -364,3 +364,34 @@ For technical support or issues:
 **Repository**: [Ghana-AMR-Surveillance-Center/data-standardizer](https://github.com/Ghana-AMR-Surveillance-Center/data-standardizer)
 
 **Made with ❤️ for AMR surveillance data standardization and processing**
+
+
+---
+
+## 👥 Contributing
+
+We welcome contributions from the community! This project is maintained by the Ghana AMR Surveillance Center team and aims to improve antimicrobial resistance data standardization across Africa.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Code of Conduct
+
+Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms.
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Ghana Health Service for supporting AMR surveillance initiatives
+- The Aurum Institute for technical guidance
+- All contributors who have helped improve this platform
