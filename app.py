@@ -288,7 +288,7 @@ def _show_introduction():
                 padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;'>
         <h2 style='color: white; margin-bottom: 1rem;'>🏥 Welcome to AMR Data Harmonizer</h2>
         <p style='font-size: 1.1rem; line-height: 1.6; color: white;'>
-            A comprehensive platform designed to address critical data quality challenges in 
+            A comprehensive platform designed to address critical data cleaning challenges in 
             <strong>Antimicrobial Resistance (AMR) surveillance</strong> across African laboratories.
         </p>
     </div>
@@ -1576,4 +1576,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 

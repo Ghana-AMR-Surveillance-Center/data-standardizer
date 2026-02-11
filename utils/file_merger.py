@@ -62,7 +62,8 @@ class FileMerger:
         1: "📁 Ready to upload",
         2: "🔍 Checking files",
         3: "🔗 Mapping columns",
-        4: "✨ Complete!"
+        4: "🔍 Audit duplicates",
+        5: "✨ Complete!"
     }
     
     def __init__(self):
@@ -75,8 +76,25 @@ class FileMerger:
         self._similarity_cache.clear()
         self._column_variations_cache.clear()
     
-    def _load_and_validate_file(self, file) -> Tuple[Optional[pd.DataFrame], Dict]:
-        """Load and validate a data file, returning the DataFrame and validation results."""
+    def _get_excel_sheet_names(self, file) -> Optional[List[str]]:
+        """Get list of sheet names from an Excel file. Resets file position after read."""
+        if not file.name.lower().endswith(('.xlsx', '.xls')):
+            return None
+        engine = 'openpyxl' if file.name.lower().endswith('.xlsx') else 'xlrd'
+        try:
+            xl = pd.ExcelFile(file, engine=engine)
+            names = xl.sheet_names
+            if hasattr(file, 'seek'):
+                file.seek(0)
+            return names
+        except Exception:
+            if hasattr(file, 'seek'):
+                file.seek(0)
+            return None
+
+    def _load_and_validate_file(self, file, sheet_name: Optional[str] = None) -> Tuple[Optional[pd.DataFrame], Dict]:
+        """Load and validate a data file, returning the DataFrame and validation results.
+        For Excel files, sheet_name selects which sheet to load; if None, loads the first sheet."""
         validation = {
             'success': False,
             'errors': [],
@@ -101,15 +119,15 @@ class FileMerger:
             if file.name.lower().endswith('.csv'):
                 df = pd.read_csv(file)
             else:
-                # Try different Excel engines for better compatibility
+                # Excel: use selected sheet or first sheet
+                excel_sheet = sheet_name if sheet_name else 0
                 try:
-                    df = pd.read_excel(file, engine='openpyxl')
+                    df = pd.read_excel(file, sheet_name=excel_sheet, engine='openpyxl')
                 except Exception:
                     try:
-                        df = pd.read_excel(file, engine='xlrd')
+                        df = pd.read_excel(file, sheet_name=excel_sheet, engine='xlrd')
                     except Exception:
-                        # Fallback to default engine
-                        df = pd.read_excel(file)
+                        df = pd.read_excel(file, sheet_name=excel_sheet)
             
             # Calculate basic statistics efficiently
             validation['stats'] = {
@@ -177,8 +195,13 @@ class FileMerger:
                 return None
             st.session_state.merged_data = merged_data
         
-        # Show final results
+        # Audit duplicates (last step before final merge complete)
         if st.session_state.merger_step == 4:
+            self._handle_duplicate_audit()
+            return None
+        
+        # Show final results
+        if st.session_state.merger_step == 5:
             self._show_merge_results()
             return st.session_state.merged_data
             
@@ -189,12 +212,13 @@ class FileMerger:
         st.markdown("""
         # 📊 Easy File Merger
         
-        ### Merge your Excel and CSV files in 4 simple steps:
+        ### Merge your Excel and CSV files in 5 simple steps:
         
-        1. 📁 **Drop your files** - Upload 2 or more Excel/CSV files
+        1. 📁 **Drop your files** - Upload 2 or more Excel/CSV files, then choose **which sheet** to use from each Excel file
         2. 🔍 **Quick check** - We'll validate your files automatically
         3. 🔗 **Match columns** - Review or adjust how columns are matched
-        4. ⬇️ **Download** - Get your merged file
+        4. 🔍 **Audit duplicates** - Decide whether to keep or remove duplicate rows before finalizing
+        5. ⬇️ **Download** - Get your merged file
         
         Need help? Click the '❓ Help' section below.
         """)
@@ -202,6 +226,9 @@ class FileMerger:
         with st.expander("❓ Help & Tips"):
             st.markdown("""
             **Common Questions:**
+            
+            - **Excel with multiple sheets?**
+                - After uploading, select which sheet to merge from each Excel file in the "Select sheets to merge" section.
             
             - **Which file should I upload first?**
                 - Your first file becomes the template, so upload your most important file first
@@ -213,6 +240,12 @@ class FileMerger:
                 - We automatically detect similar column names
                 - You can manually adjust any matches
                 - New columns will be added if needed
+            
+            - **Same column in many files?**
+                - We build one shared mapping for all unique columns, then apply it to each file. You review each file once; your choices are saved and reused so you don't repeat the same mapping.
+            
+            - **Duplicate rows?**
+                - Before finalizing, you can audit duplicates (identical rows) and choose to keep all rows or remove duplicates so you can account for any data loss.
             
             **Tips:**
             - Clean your files before uploading for best results
@@ -227,7 +260,7 @@ class FileMerger:
         # Show progress bar and status
         col1, col2 = st.columns([4, 1])
         with col1:
-            st.progress(current_step/4)
+            st.progress(current_step / 5)
             st.caption(f"Status: {self.PROGRESS_STATES[current_step]}")
         
         # Add go back button if not on first step
@@ -236,9 +269,10 @@ class FileMerger:
                 # Create a unique key for each step to avoid conflicts
                 if st.button("⬅️ Go Back", key=f"go_back_step_{current_step}"):
                     # First clear any stored data for the current step
-                    if current_step == 4:
-                        if 'merged_data' in st.session_state:
-                            del st.session_state.merged_data
+                    if current_step == 5:
+                        pass  # No extra state to clear for results step
+                    elif current_step == 4:
+                        pass  # Keep merged_data when going back to step 3
                     elif current_step == 3:
                         if 'temp_merged_data' in st.session_state:
                             del st.session_state.temp_merged_data
@@ -247,6 +281,7 @@ class FileMerger:
                             del st.session_state.merger_dataframes
                         if 'merger_info' in st.session_state:
                             del st.session_state.merger_info
+                        # Keep merger_excel_sheets and merger_sheet_selections so user can change sheet choice
                     
                     # Go back one step
                     st.session_state.merger_step -= 1
@@ -290,11 +325,55 @@ class FileMerger:
         
         st.session_state.merger_files = uploaded_files
         
+        # Build Excel sheet names per file (for sheet selection)
+        merger_excel_sheets = {}
+        for i, f in enumerate(uploaded_files):
+            if f.name.lower().endswith(('.xlsx', '.xls')):
+                sheets = self._get_excel_sheet_names(f)
+                merger_excel_sheets[i] = sheets if sheets else ['Sheet1']
+            else:
+                merger_excel_sheets[i] = None
+        st.session_state.merger_excel_sheets = merger_excel_sheets
+        
+        # Default sheet selection to first sheet for each Excel file
+        if 'merger_sheet_selections' not in st.session_state:
+            st.session_state.merger_sheet_selections = {}
+        for i, names in merger_excel_sheets.items():
+            if names and i not in st.session_state.merger_sheet_selections:
+                st.session_state.merger_sheet_selections[i] = names[0]
+        
+        # Sheet selection (Excel files only)
+        if any(merger_excel_sheets.get(i) for i in range(len(uploaded_files))):
+            st.markdown("## 📑 Select sheets to merge")
+            st.caption("For each Excel file, choose which sheet to include. CSV files use the whole file.")
+            for i, f in enumerate(uploaded_files):
+                sheet_names = merger_excel_sheets.get(i)
+                if sheet_names:
+                    current = st.session_state.merger_sheet_selections.get(i, sheet_names[0])
+                    try:
+                        default_idx = sheet_names.index(current) if current in sheet_names else 0
+                    except (ValueError, TypeError):
+                        default_idx = 0
+                    selected = st.selectbox(
+                        f"**{f.name}**",
+                        options=sheet_names,
+                        index=default_idx,
+                        key=f"merger_sheet_{i}",
+                        help="Select the sheet to merge from this Excel file"
+                    )
+                    st.session_state.merger_sheet_selections[i] = selected
+                else:
+                    st.caption(f"📄 {f.name} — CSV (no sheet selection)")
+        
         # Add confirmation button to proceed
         st.markdown("---")
         col1, col2, col3 = st.columns([2,2,1])
         with col2:
             if st.button("✅ Confirm and Continue", key="confirm_upload", type="primary"):
+                # Sync sheet selections from selectbox keys
+                for i in range(len(uploaded_files)):
+                    if merger_excel_sheets.get(i) and f"merger_sheet_{i}" in st.session_state:
+                        st.session_state.merger_sheet_selections[i] = st.session_state[f"merger_sheet_{i}"]
                 # Reset merger state for new process
                 if 'current_file_idx' in st.session_state:
                     del st.session_state.current_file_idx
@@ -319,11 +398,17 @@ class FileMerger:
             progress_bar = st.progress(0)
             status_text = st.empty()
             
+            merger_excel_sheets = st.session_state.get('merger_excel_sheets', {})
+            merger_sheet_selections = st.session_state.get('merger_sheet_selections', {})
+            
             for i, file in enumerate(st.session_state.merger_files):
                 status_text.text(f"Processing file {i+1} of {len(st.session_state.merger_files)}: {file.name}")
                 progress_bar.progress((i + 1) / len(st.session_state.merger_files))
                 
-                df, validation = self._load_and_validate_file(file)
+                sheet_name = None
+                if merger_excel_sheets.get(i):
+                    sheet_name = merger_sheet_selections.get(i) or merger_excel_sheets[i][0]
+                df, validation = self._load_and_validate_file(file, sheet_name=sheet_name)
                 
                 if not validation['success']:
                     st.error(f"❌ Error loading {file.name}")
@@ -355,6 +440,11 @@ class FileMerger:
         col1, col2, col3 = st.columns([2,2,1])
         with col2:
             if st.button("✅ Proceed to Mapping", key="confirm_validation", type="primary"):
+                with st.spinner("Building shared column mapping for all files..."):
+                    self._build_global_column_mapping(
+                        st.session_state.merger_dataframes,
+                        st.session_state.merger_info,
+                    )
                 st.session_state.merger_step = 3
                 return True
                 
@@ -410,6 +500,8 @@ class FileMerger:
             with col2:
                 if st.button("✅ Complete Merge", key="confirm_merge", type="primary"):
                     st.session_state.merger_step = 4
+                    if "duplicate_audit_choice" in st.session_state:
+                        del st.session_state["duplicate_audit_choice"]
                     return merged_data
             return None
         
@@ -419,11 +511,14 @@ class FileMerger:
         # Show current file info
         st.info(f"📄 **Current File:** {file_info[current_file_idx]['name']} ({file_info[current_file_idx]['validation']['stats']['rows']} rows, {file_info[current_file_idx]['validation']['stats']['columns']} columns)")
         
-        # Show instructions
+        # Show instructions and global-mapping notice
+        unique_count = st.session_state.get('merger_unique_columns_count', 0)
+        if unique_count and st.session_state.get('merger_global_column_mapping'):
+            st.info(f"📌 **Shared mapping:** One mapping was built for {unique_count} unique columns across all files. It is applied to each file below—review and adjust if needed; your choices are saved and reused for later files.")
         st.markdown("### 📋 Instructions")
         st.markdown("""
-        1. **Review the automatic column mappings** below
-        2. **Adjust any mappings** if needed using the dropdown menus
+        1. **Review the column mappings** below (reused from the shared mapping when the same column name appears)
+        2. **Adjust any mappings** if needed; your choice is saved and applied to other files with the same column
         3. **Click 'Apply Mappings'** to merge this file with the previous data
         4. **Click 'Next File'** to continue or **'Complete Merge'** if this is the last file
         """)
@@ -448,26 +543,37 @@ class FileMerger:
         return None
         
     def _process_file_mapping(self, file_idx: int, merged_data: pd.DataFrame, secondary_df: pd.DataFrame, file_info: List[Dict]) -> bool:
-        """Process mapping for a single file."""
+        """Process mapping for a single file. Uses saved global mapping where applicable, then presents for review."""
         st.markdown(f"**Merging:** {file_info[file_idx]['name']} → {file_info[0]['name']}")
         
-        # Generate and display mappings
+        # Baseline: smart mappings for this file
         mappings = self._generate_smart_mappings(merged_data, secondary_df)
+        # Override with saved global mapping so same column names map once and are reused
+        global_map = st.session_state.get('merger_global_column_mapping', {})
+        for sec_col in secondary_df.columns:
+            if sec_col in global_map:
+                suggested = global_map[sec_col]
+                if suggested is None or suggested in merged_data.columns:
+                    mappings[sec_col] = suggested
+                # else keep smart mapping if suggested primary col no longer in merged_data
         
-        # Show automatic mapping statistics
+        # Show mapping statistics (including how many came from saved mapping)
+        from_global = sum(1 for c in secondary_df.columns if c in global_map)
         auto_mapped = len([m for m in mappings.values() if m is not None])
         new_columns = len(mappings) - auto_mapped
         
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("🎯 Auto-mapped", auto_mapped)
+            st.metric("🎯 Mapped", auto_mapped)
         with col2:
-            st.metric("🆕 New columns", new_columns)
+            st.metric("📌 From saved", from_global)
         with col3:
-            st.metric("📊 Total columns", len(mappings))
+            st.metric("🆕 New columns", new_columns)
+        with col4:
+            st.metric("📊 Total", len(mappings))
         
         st.markdown("### 🔍 Review and Edit Column Mappings")
-        st.info("Review the automatic mappings below. You can change any mapping by selecting a different column from the dropdown.")
+        st.info("Mappings are reused across files when column names match. Change any mapping below; your choice will be saved and applied to later files.")
         
         # Create an interactive mapping table
         for sec_col in secondary_df.columns:
@@ -525,6 +631,11 @@ class FileMerger:
         # Apply mappings and merge
         try:
             st.session_state.temp_merged_data = self._apply_mappings_and_merge(merged_data, secondary_df, mappings)
+            # Save this file's mappings to global so later files with same column names get these choices
+            if 'merger_global_column_mapping' not in st.session_state:
+                st.session_state.merger_global_column_mapping = {}
+            for k, v in mappings.items():
+                st.session_state.merger_global_column_mapping[k] = v
             st.success(f"✅ Successfully mapped and merged File {file_idx + 1}")
             
             # Show preview of merged data
@@ -549,10 +660,13 @@ class FileMerger:
                         # Store the final merged data
                         st.session_state.merged_data = st.session_state.temp_merged_data
                         st.session_state.merger_step = 4
+                        if "duplicate_audit_choice" in st.session_state:
+                            del st.session_state["duplicate_audit_choice"]
                         st.rerun()
                 else:
                     if st.button(f"➡️ Next File ({file_idx + 1}/{len(st.session_state.merger_dataframes)})", key=f"next_{file_idx}", type="primary"):
-                        # Move to next file
+                        # Persist cumulative merge so next file merges with (primary + file2 + ... + current)
+                        st.session_state.merged_data = st.session_state.temp_merged_data
                         st.session_state.current_file_idx = file_idx + 1
                         st.rerun()
             
@@ -566,6 +680,10 @@ class FileMerger:
                         del st.session_state.merged_data
                     if 'temp_merged_data' in st.session_state:
                         del st.session_state.temp_merged_data
+                    if 'merger_global_column_mapping' in st.session_state:
+                        del st.session_state.merger_global_column_mapping
+                    if 'merger_unique_columns_count' in st.session_state:
+                        del st.session_state.merger_unique_columns_count
                     st.rerun()
             
             return True
@@ -576,17 +694,74 @@ class FileMerger:
             st.error(f"Full error: {traceback.format_exc()}")
             return False
             
+    def _handle_duplicate_audit(self) -> None:
+        """Let users audit duplicates and choose to keep all rows or remove duplicates before finalizing."""
+        st.markdown("## 🔍 Step 4: Audit Duplicates")
+        merged_data = st.session_state.merged_data
+        total_rows = len(merged_data)
+        duplicate_mask = merged_data.duplicated(keep='first')
+        duplicate_count = int(duplicate_mask.sum())
+        unique_after_removal = total_rows - duplicate_count
+
+        st.markdown("""
+        Review duplicate rows in your merged data. Rows that are **identical across all columns** are considered duplicates.
+        You can keep all rows or remove duplicates to avoid data loss you didn't intend.
+        """)
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("📊 Total rows", f"{total_rows:,}")
+        with col2:
+            st.metric("🔄 Duplicate rows", f"{duplicate_count:,}")
+        with col3:
+            st.metric("✅ Unique rows (if removed)", f"{unique_after_removal:,}")
+
+        if duplicate_count > 0:
+            st.markdown("### 👀 Preview of duplicate rows (would be removed if you choose Remove)")
+            st.caption("Showing a sample of rows that are duplicates of another row. These would be removed if you choose \"Remove duplicate rows\".")
+            dup_rows = merged_data[duplicate_mask].head(20)
+            st.dataframe(dup_rows, use_container_width=True)
+            if duplicate_count > 20:
+                st.caption(f"Showing 20 of {duplicate_count:,} duplicate rows.")
+        else:
+            st.success("No duplicate rows found. Your merged data has no identical rows.")
+
+        st.markdown("### ❓ What would you like to do?")
+        choice = st.radio(
+            "Duplicate handling",
+            options=["keep_all", "remove_duplicates"],
+            index=0,
+            format_func=lambda x: "Keep all rows (no duplicates removed)" if x == "keep_all" else "Remove duplicate rows and continue",
+            key="duplicate_audit_choice",
+            help="Keep all rows to preserve every record; remove duplicates to keep one copy of each unique row.",
+        )
+
+        st.markdown("---")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("✅ Apply and continue to results", key="duplicate_audit_apply", type="primary"):
+                # Persist choice so results step shows correct metric (and we act on it reliably)
+                st.session_state.merger_duplicates_removed = (choice == "remove_duplicates")
+                if st.session_state.merger_duplicates_removed:
+                    st.session_state.merged_data = merged_data.drop_duplicates().reset_index(drop=True)
+                st.session_state.merger_step = 5
+                st.rerun()
+
     def _show_merge_results(self):
         """Display the final merge results."""
-        st.markdown("## 🎉 Step 4: Merge Complete!")
+        st.markdown("## 🎉 Step 5: Merge Complete!")
         
         merged_data = st.session_state.merged_data
         original_files = st.session_state.merger_files
         original_dfs = st.session_state.merger_dataframes
         
-        # Calculate comprehensive statistics
+        # Calculate statistics: only count as "removed" if user chose to remove in audit step
         total_original_rows = sum(len(df) for df in original_dfs)
-        duplicates_removed = total_original_rows - len(merged_data)
+        user_removed_duplicates = st.session_state.get("merger_duplicates_removed", False)
+        if user_removed_duplicates:
+            duplicates_removed = total_original_rows - len(merged_data)
+        else:
+            duplicates_removed = 0
         data_loss_percentage = (duplicates_removed / total_original_rows * 100) if total_original_rows > 0 else 0
         
         # Show comprehensive statistics
@@ -684,6 +859,18 @@ class FileMerger:
                 st.session_state.merger_dataframes = None
                 st.session_state.merger_info = None
                 st.session_state.merged_data = None
+                if "merger_duplicates_removed" in st.session_state:
+                    del st.session_state["merger_duplicates_removed"]
+                if "duplicate_audit_choice" in st.session_state:
+                    del st.session_state["duplicate_audit_choice"]
+                if 'merger_excel_sheets' in st.session_state:
+                    del st.session_state.merger_excel_sheets
+                if 'merger_sheet_selections' in st.session_state:
+                    del st.session_state.merger_sheet_selections
+                if 'merger_global_column_mapping' in st.session_state:
+                    del st.session_state.merger_global_column_mapping
+                if 'merger_unique_columns_count' in st.session_state:
+                    del st.session_state.merger_unique_columns_count
                 st.rerun()
     
     def _dataframe_to_excel_bytes(self, df: pd.DataFrame) -> bytes:
@@ -783,6 +970,56 @@ class FileMerger:
                 mappings[sec_col] = None  # Will create as new column
                 
         return mappings
+
+    def _suggest_single_column_mapping(
+        self, primary_df: pd.DataFrame, sec_col_name: str, sec_col_series: pd.Series
+    ) -> Optional[str]:
+        """Suggest the best primary column for a single secondary column (by name and data). Used for global mapping."""
+        primary_cols = list(primary_df.columns)
+        best_score = 0.5  # threshold
+        best_pri_col = None
+        for pri_col in primary_cols:
+            cache_key = f"{sec_col_name}|{pri_col}"
+            if cache_key in self._similarity_cache:
+                score = self._similarity_cache[cache_key]
+            else:
+                similarity_report = self._analyze_column_similarity_optimized(
+                    pri_col, primary_df[pri_col], sec_col_name, sec_col_series
+                )
+                score = similarity_report['score']
+                self._similarity_cache[cache_key] = score
+            if score < 0.9:
+                ast_cache_key = f"ast|{pri_col}|{sec_col_name}"
+                if ast_cache_key in self._similarity_cache:
+                    ast_score = self._similarity_cache[ast_cache_key]
+                else:
+                    ast_score = self._check_ast_patterns(pri_col, sec_col_name)
+                    self._similarity_cache[ast_cache_key] = ast_score
+                if ast_score > score:
+                    score = ast_score
+            if score > best_score:
+                best_score = score
+                best_pri_col = pri_col
+        return best_pri_col
+
+    def _build_global_column_mapping(self, dataframes: List[pd.DataFrame], file_info: List[Dict]) -> None:
+        """Identify unique columns across all files and build a single saved mapping to the primary schema."""
+        primary_df = dataframes[0]
+        primary_columns = set(primary_df.columns)
+        all_unique_cols = set()
+        for df in dataframes:
+            all_unique_cols.update(df.columns)
+        global_mapping = {}
+        for col in primary_columns:
+            global_mapping[col] = col
+        for col in sorted(all_unique_cols - primary_columns):
+            for df in dataframes:
+                if col in df.columns:
+                    suggested = self._suggest_single_column_mapping(primary_df, col, df[col])
+                    global_mapping[col] = suggested
+                    break
+        st.session_state.merger_global_column_mapping = global_mapping
+        st.session_state.merger_unique_columns_count = len(all_unique_cols)
 
     def _check_ast_patterns(self, col1: str, col2: str) -> float:
         """Check for AST-specific column patterns like AMC_ND20 → INT_AMC."""
@@ -1183,8 +1420,8 @@ class FileMerger:
                 # Both are empty, return empty dataframe with correct columns
                 merged = pd.DataFrame(columns=final_columns)
 
-            # Remove duplicates if any
-            merged = merged.drop_duplicates().reset_index(drop=True)
+            # Duplicates are not removed here; user audits and decides in Step 4 (Audit duplicates)
+            merged = merged.reset_index(drop=True)
 
             return merged
 

@@ -31,6 +31,10 @@ class SessionManager:
         'merger_dataframes',
         'merger_files',
         'merger_info',
+        'merger_excel_sheets',
+        'merger_sheet_selections',
+        'merger_global_column_mapping',
+        'merger_unique_columns_count',
         'processed_data',
         'amr_data',
         'validation_results',
@@ -63,7 +67,9 @@ class SessionManager:
         elif workflow_type == 'multiple':
             keys_to_remove.extend([
                 'merged_data', 'temp_merged_data', 'merger_dataframes',
-                'merger_files', 'merger_info', 'merger_step', 'current_file_idx'
+                'merger_files', 'merger_info', 'merger_excel_sheets',
+                'merger_sheet_selections', 'merger_global_column_mapping',
+                'merger_unique_columns_count', 'merger_step', 'current_file_idx'
             ])
         elif workflow_type == 'amr':
             keys_to_remove.extend([
