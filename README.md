@@ -1,31 +1,46 @@
 # 🏥 GLASS Data Standardizer
 
-**Advanced Data Processing & Standardization Platform**
+**Advanced Data Processing & Standardization Platform for AMR Surveillance**
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
+A comprehensive platform designed to address critical data cleaning challenges in **Antimicrobial Resistance (AMR) surveillance** across African laboratories. This tool helps laboratories prepare their data for submission to global surveillance systems like GLASS and WHONET.
+
 ## 🚀 Quick Start
 
-### Option 1: Streamlit Cloud (Recommended for Sharing)
+### Option 1: Streamlit Cloud Deployment (Recommended for Sharing)
 [![Deploy to Streamlit Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 
-1. Push your code to GitHub
+1. Push your code to GitHub (this repository)
 2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your repository and deploy
-4. See [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) for detailed instructions
+3. Connect your repository: `Ghana-AMR-Surveillance-Center/data-standardizer`
+4. Set main file path: `app.py`
+5. Click "Deploy" and wait for deployment to complete
+6. Your app will be live at `https://your-app-name.streamlit.app`
 
-### Option 2: Automatic Setup (Local)
+**Note**: For Streamlit Cloud, ensure your `requirements.txt` includes all dependencies.
+
+### Option 2: Local Development Setup
+
+#### Windows (Easy Launch)
 ```bash
-# Windows
-start.bat
+# Double-click or run:
+launch.bat
+```
 
-# Linux/macOS
-python setup.py && python run.py
+#### Linux/macOS
+```bash
+# Make scripts executable
+chmod +x deploy_production.sh scripts/deploy.sh
+
+# Run deployment script
+./deploy_production.sh
 ```
 
 ### Option 3: Manual Setup (Local)
+
 ```bash
 # 1. Create virtual environment
 python -m venv .venv
@@ -41,16 +56,22 @@ pip install -r requirements.txt
 
 # 4. Run application
 python run.py
+# OR for production mode:
+python run_production.py
 ```
 
-### Option 4: Direct Run (Local)
+### Option 4: Docker Deployment
+
 ```bash
-python -m streamlit run app.py --server.port 8501
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Access at http://localhost:8501
 ```
 
 ## 📋 System Requirements
 
-- **Python**: 3.8 or higher
+- **Python**: 3.8 or higher (3.10+ recommended)
 - **Memory**: 4GB RAM minimum, 8GB recommended
 - **Storage**: 1GB free space
 - **OS**: Windows 10+, macOS 10.14+, Linux (Ubuntu 18.04+)
@@ -59,20 +80,39 @@ python -m streamlit run app.py --server.port 8501
 
 ### Core Functionality
 - **📁 Single File Processing**: Upload, analyze, transform, and export individual files
+  - Column mapping & renaming
+  - Data transformation and cleaning
+  - Quality validation
+  - Multi-format export (CSV, Excel, JSON, XML)
+
 - **📊 Multiple File Merging**: Intelligent merging of multiple Excel/CSV files
+  - **🆕 Excel Sheet Selection**: Choose specific sheets from Excel files before merging
+  - Smart column matching with fuzzy logic
+  - Automatic data harmonization
+  - Duplicate detection and audit
+  - Shared column mapping across files
+  - One-file-at-a-time processing workflow
+
 - **🧬 AMR Analytics**: Professional antimicrobial resistance analysis with CLSI compliance
-- **🔗 Smart Column Mapping**: AI-powered column matching and mapping
+  - CLSI-compliant analysis (M100-S33, M02-A13)
+  - Resistance rate calculations with confidence intervals
+  - MDR/XDR/PDR classification
+  - Professional visualizations and heatmaps
+  - Statistical validation
+
+- **🎯 Data Preparation Wizards**:
+  - **GLASS Preparation Wizard**: Step-by-step guided process for GLASS submission
+  - **WHONET Preparation Wizard**: Step-by-step guided process for WHONET import
+  - Automatic data cleaning and standardization
+  - Built-in format validation
+  - Comprehensive quality reports
+
+### Advanced Features
+- **🔗 Smart Column Mapping**: AI-powered column matching with fuzzy matching and AST-specific patterns
 - **🔄 Data Transformation**: Comprehensive data cleaning and standardization
 - **📈 Quality Assessment**: Advanced data quality metrics and validation
 - **📤 Multi-format Export**: Export to CSV, Excel, JSON, XML formats
-
-### AMR Analytics Features
-- **🧬 Professional Visualizations**: Publication-quality charts and heatmaps
-- **📊 CLSI Compliance**: Current antimicrobial resistance standards (M100-S33, M02-A13)
-- **🛡️ Resistance Analysis**: MDR/XDR/PDR classification and resistance rates
-- **📈 Antibiogram Generation**: Interactive resistance heatmaps
-- **🔍 Data Quality Assessment**: Comprehensive data validation and scoring
-- **📥 Export Capabilities**: Professional reports and high-resolution charts
+- **🛡️ Production Ready**: Error handling, logging, monitoring, and security
 
 ### Production Features
 - **🛡️ Error Handling**: Comprehensive error logging and recovery
@@ -80,43 +120,70 @@ python -m streamlit run app.py --server.port 8501
 - **✅ Data Validation**: Multi-level data validation and quality checks
 - **💾 Memory Optimization**: Automatic DataFrame optimization
 - **⚙️ Configuration Management**: Centralized settings and customization
+- **🔒 Security**: File upload validation, rate limiting, input sanitization
 
 ## 🏗️ Architecture
 
 ```
 data-standardizer/
-├── app.py                 # Main Streamlit application
-├── run.py                 # Production launcher
-├── setup.py              # Environment setup script
-├── start.bat             # Windows launcher
-├── requirements.txt      # Python dependencies
-├── README.md             # This file
-├── .gitignore           # Git ignore rules
-├── data/                 # Data directory
-│   └── .gitkeep         # Directory placeholder
-├── utils/                # Core utility modules
-│   ├── amr_analytics.py  # AMR analysis engine (CLSI compliant)
-│   ├── amr_interface.py  # AMR analytics interface
-│   ├── app_config.py     # Configuration management
-│   ├── app_settings.py   # Enhanced settings management
-│   ├── ast_detector.py   # AST data type detection
-│   ├── cache_manager.py  # Advanced caching system
-│   ├── column_mapper.py  # Intelligent column mapping
-│   ├── data_profiler.py  # Data profiling and analysis
-│   ├── data_quality.py   # Data quality assessment
-│   ├── error_handler.py  # Error handling system
-│   ├── excel_exporter.py # Multi-format export
-│   ├── file_handler.py   # File processing
-│   ├── file_merger.py    # File merging logic
-│   ├── helpers.py        # Helper functions
-│   ├── logger.py         # Logging system
+├── app.py                      # Main Streamlit application
+├── run.py                      # Development launcher
+├── run_production.py           # Production launcher
+├── launch.bat                  # Windows quick launcher
+├── requirements.txt            # Python dependencies
+├── README.md                   # This file
+├── .gitignore                  # Git ignore rules
+├── docker-compose.yml          # Docker deployment config
+├── deploy_production.sh        # Production deployment script
+│
+├── config/                     # Configuration modules
+│   ├── __init__.py
+│   └── production.py          # Production configuration
+│
+├── utils/                      # Core utility modules
+│   ├── amr_analytics.py       # AMR analysis engine (CLSI compliant)
+│   ├── amr_data_quality.py    # AMR-specific quality assessment
+│   ├── amr_interface.py       # AMR analytics interface
+│   ├── enhanced_amr_interface.py  # Enhanced AMR interface
+│   ├── app_config.py          # Configuration management
+│   ├── app_settings.py        # Enhanced settings management
+│   ├── ast_detector.py        # AST data type detection
+│   ├── cache_manager.py       # Advanced caching system
+│   ├── column_mapper.py       # Intelligent column mapping
+│   ├── column_utils.py        # Column utilities
+│   ├── data_profiler.py       # Data profiling and analysis
+│   ├── data_quality.py        # Data quality assessment
+│   ├── error_handler.py       # Error handling system
+│   ├── excel_exporter.py      # Multi-format export
+│   ├── file_handler.py        # File processing
+│   ├── file_merger.py         # File merging logic (with sheet selection)
+│   ├── glass_standardizer.py  # GLASS format standardization
+│   ├── glass_wizard.py        # GLASS preparation wizard
+│   ├── whonet_standardizer.py # WHONET format standardization
+│   ├── whonet_wizard.py       # WHONET preparation wizard
+│   ├── helpers.py             # Helper functions
+│   ├── logger.py              # Logging system
 │   ├── performance_monitor.py # Performance monitoring
-│   ├── schema_analyzer.py # Schema analysis
-│   ├── transformer.py    # Data transformation
-│   ├── user_feedback.py  # Enhanced user feedback system
-│   └── validator.py      # Validation logic
-└── deployment/           # Deployment documentation
-    └── README.md         # Deployment guide
+│   ├── production_error_handler.py  # Production error handling
+│   ├── production_logger.py   # Production logging
+│   ├── schema_analyzer.py     # Schema analysis
+│   ├── security.py            # Security validation
+│   ├── session_manager.py     # Session state management
+│   ├── transformer.py         # Data transformation
+│   ├── ui_components.py       # UI components
+│   ├── ui_validator.py        # UI validation
+│   ├── user_feedback.py       # Enhanced user feedback system
+│   └── validator.py           # Validation logic
+│
+├── scripts/                    # Deployment scripts
+│   ├── deploy.bat             # Windows deployment script
+│   └── deploy.sh              # Linux/macOS deployment script
+│
+├── docs/                       # Documentation
+│   └── PRODUCTION_GUIDE.md    # Production deployment guide
+│
+└── deployment/                 # Deployment documentation
+    └── README.md              # Deployment guide
 ```
 
 ## 🔧 Usage
@@ -124,18 +191,28 @@ data-standardizer/
 ### Single File Workflow
 1. **Upload**: Select and upload your data file (CSV, Excel)
 2. **Analyze**: Review data structure and quality metrics
-3. **Map**: Configure column mappings to target schema
+3. **Map**: Configure column mappings to target schema (optional)
 4. **Transform**: Apply data cleaning and standardization
 5. **Validate**: Verify data quality and completeness
 6. **Export**: Download processed data in your preferred format
 
-### Multiple File Workflow
+### Multiple File Workflow (with Excel Sheet Selection)
 1. **Upload**: Select multiple files for merging
-2. **Validate**: Review file structures and compatibility
-3. **Map**: Configure column mappings between files
-4. **Merge**: Combine files with intelligent data handling
-5. **Review**: Analyze merge statistics and data quality
-6. **Export**: Download merged dataset
+2. **Select Sheets**: For Excel files, choose which sheet to merge from each file
+3. **Validate**: Review file structures and compatibility
+4. **Map**: Configure column mappings between files (shared mapping across files)
+5. **Merge**: Combine files one at a time with intelligent data handling
+6. **Audit Duplicates**: Review and decide on duplicate row handling
+7. **Review**: Analyze merge statistics and data quality
+8. **Export**: Download merged dataset
+
+### GLASS/WHONET Preparation Wizards
+1. **Choose Wizard**: Select GLASS or WHONET preparation wizard
+2. **Upload Data**: Upload your AMR data file
+3. **Follow Steps**: Complete the guided step-by-step process
+4. **Review Quality**: Check comprehensive data quality assessment
+5. **Apply Fixes**: Use auto-fix options if needed
+6. **Export**: Download your standardized, submission-ready data
 
 ## 🛠️ Configuration
 
@@ -144,8 +221,21 @@ The application uses a centralized configuration system:
 - **App Settings**: File size limits, memory usage, processing options
 - **UI Settings**: Theme, layout, display preferences
 - **Data Processing**: Chunk sizes, optimization settings
-- **Merging**: Similarity thresholds, mapping preferences
+- **Merging**: Similarity thresholds, mapping preferences, sheet selection
 - **Export**: Default formats, compression options
+
+### Environment Variables
+
+For production deployment, set these environment variables:
+
+```bash
+ENVIRONMENT=production
+SECRET_KEY=your-secret-key-here
+HOST=0.0.0.0
+PORT=8501
+LOG_LEVEL=INFO
+MAX_FILE_SIZE_MB=100
+```
 
 ## 📊 Data Quality Metrics
 
@@ -154,6 +244,33 @@ The application uses a centralized configuration system:
 - **Accuracy**: Data accuracy validation
 - **Validity**: Data validity checks
 - **Uniqueness**: Duplicate detection and analysis
+- **AMR-Specific**: Organism name standardization, antimicrobial result validation, GLASS/WHONET compliance
+
+## 🚀 Deployment
+
+### Streamlit Cloud
+
+1. Push code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect repository: `Ghana-AMR-Surveillance-Center/data-standardizer`
+4. Set main file: `app.py`
+5. Deploy!
+
+### Docker
+
+```bash
+docker-compose up -d
+```
+
+### Production Server
+
+```bash
+# Linux/macOS
+./deploy_production.sh
+
+# Windows
+scripts\deploy.bat
+```
 
 ## 🔍 Troubleshooting
 
@@ -166,22 +283,29 @@ The application uses a centralized configuration system:
 2. **Dependencies Not Installing**
    - Check internet connection
    - Try: `pip install --upgrade pip`
-   - Run setup.py again
+   - Run: `pip install -r requirements.txt`
 
 3. **Port Already in Use**
-   - Kill existing processes: `taskkill /f /im python.exe`
+   - Windows: `taskkill /f /im python.exe`
+   - Linux/macOS: `pkill -f streamlit`
    - Or use different port: `streamlit run app.py --server.port 8502`
 
 4. **Virtual Environment Issues**
-   - Delete .venv folder and run setup.py again
+   - Delete `.venv` folder and recreate
    - Ensure you have write permissions
+
+5. **Excel File Issues**
+   - Ensure `openpyxl` and `xlrd` are installed
+   - Check file is not corrupted
+   - Try opening file in Excel first
 
 ### Getting Help
 
 - Check the error messages in the terminal
-- Review the application logs
+- Review the application logs in `logs/` directory
 - Ensure all system requirements are met
 - Try running as administrator if on Windows
+- Check the [Production Guide](docs/PRODUCTION_GUIDE.md) for deployment issues
 
 ## 📈 Performance
 
@@ -189,6 +313,7 @@ The application uses a centralized configuration system:
 - **Chunked Processing**: Large file handling
 - **Caching**: Intelligent data caching
 - **Monitoring**: Real-time performance metrics
+- **Sheet Selection**: Efficient Excel file processing
 
 ## 🔒 Security
 
@@ -196,6 +321,7 @@ The application uses a centralized configuration system:
 - **File Upload Limits**: Configurable file size restrictions
 - **Error Information**: Controlled error disclosure
 - **Memory Management**: Automatic cleanup
+- **Security Validation**: File type and content validation
 
 ## 📄 License
 
@@ -204,23 +330,37 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 ## 📞 Support
 
 For technical support or issues:
-1. Check the troubleshooting section
-2. Review the application logs
-3. Ensure system requirements are met
-4. Check the deployment guide
+- **Email**: mikekay262@gmail.com
+- **Repository**: [Ghana-AMR-Surveillance-Center/data-standardizer](https://github.com/Ghana-AMR-Surveillance-Center/data-standardizer)
+- Check the troubleshooting section above
+- Review the application logs
+- Check the [Production Guide](docs/PRODUCTION_GUIDE.md)
+
+## 🎯 Recent Updates
+
+### Version 2.0.0 (Latest)
+- ✅ **Excel Sheet Selection**: Choose specific sheets from Excel files during merging
+- ✅ **Shared Column Mapping**: Column mappings are saved and reused across files
+- ✅ **GLASS Preparation Wizard**: Step-by-step guided process for GLASS submission
+- ✅ **WHONET Preparation Wizard**: Step-by-step guided process for WHONET import
+- ✅ **Enhanced AMR Analytics**: CLSI-compliant analysis with statistical validation
+- ✅ **Production Ready**: Comprehensive error handling, logging, and monitoring
+- ✅ **Performance Optimizations**: Memory management and caching improvements
 
 ---
 
 **Version**: 2.0.0  
-**Last Updated**: 2024  
-**Compatibility**: Python 3.8+, Windows 10+, macOS 10.14+, Linux Ubuntu 18.04+
+**Last Updated**: February 2025  
+**Compatibility**: Python 3.8+, Windows 10+, macOS 10.14+, Linux Ubuntu 18.04+  
+**Repository**: [Ghana-AMR-Surveillance-Center/data-standardizer](https://github.com/Ghana-AMR-Surveillance-Center/data-standardizer)
 
-**Made with ❤️ for data standardization and processing**
+**Made with ❤️ for AMR surveillance data standardization and processing**
