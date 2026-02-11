@@ -8,7 +8,15 @@
 
 ## 🚀 Quick Start
 
-### Option 1: Automatic Setup (Recommended)
+### Option 1: Streamlit Cloud (Recommended for Sharing)
+[![Deploy to Streamlit Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+
+1. Push your code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect your repository and deploy
+4. See [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) for detailed instructions
+
+### Option 2: Automatic Setup (Local)
 ```bash
 # Windows
 start.bat
@@ -17,7 +25,7 @@ start.bat
 python setup.py && python run.py
 ```
 
-### Option 2: Manual Setup
+### Option 3: Manual Setup (Local)
 ```bash
 # 1. Create virtual environment
 python -m venv .venv
@@ -35,7 +43,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-### Option 3: Direct Run
+### Option 4: Direct Run (Local)
 ```bash
 python -m streamlit run app.py --server.port 8501
 ```
@@ -52,10 +60,19 @@ python -m streamlit run app.py --server.port 8501
 ### Core Functionality
 - **📁 Single File Processing**: Upload, analyze, transform, and export individual files
 - **📊 Multiple File Merging**: Intelligent merging of multiple Excel/CSV files
+- **🧬 AMR Analytics**: Professional antimicrobial resistance analysis with CLSI compliance
 - **🔗 Smart Column Mapping**: AI-powered column matching and mapping
 - **🔄 Data Transformation**: Comprehensive data cleaning and standardization
 - **📈 Quality Assessment**: Advanced data quality metrics and validation
 - **📤 Multi-format Export**: Export to CSV, Excel, JSON, XML formats
+
+### AMR Analytics Features
+- **🧬 Professional Visualizations**: Publication-quality charts and heatmaps
+- **📊 CLSI Compliance**: Current antimicrobial resistance standards (M100-S33, M02-A13)
+- **🛡️ Resistance Analysis**: MDR/XDR/PDR classification and resistance rates
+- **📈 Antibiogram Generation**: Interactive resistance heatmaps
+- **🔍 Data Quality Assessment**: Comprehensive data validation and scoring
+- **📥 Export Capabilities**: Professional reports and high-resolution charts
 
 ### Production Features
 - **🛡️ Error Handling**: Comprehensive error logging and recovery
@@ -75,10 +92,16 @@ data-standardizer/
 ├── requirements.txt      # Python dependencies
 ├── README.md             # This file
 ├── .gitignore           # Git ignore rules
+├── data/                 # Data directory
+│   └── .gitkeep         # Directory placeholder
 ├── utils/                # Core utility modules
+│   ├── amr_analytics.py  # AMR analysis engine (CLSI compliant)
+│   ├── amr_interface.py  # AMR analytics interface
 │   ├── app_config.py     # Configuration management
+│   ├── app_settings.py   # Enhanced settings management
+│   ├── ast_detector.py   # AST data type detection
+│   ├── cache_manager.py  # Advanced caching system
 │   ├── column_mapper.py  # Intelligent column mapping
-│   ├── data_filter.py    # Data filtering logic
 │   ├── data_profiler.py  # Data profiling and analysis
 │   ├── data_quality.py   # Data quality assessment
 │   ├── error_handler.py  # Error handling system
@@ -90,7 +113,7 @@ data-standardizer/
 │   ├── performance_monitor.py # Performance monitoring
 │   ├── schema_analyzer.py # Schema analysis
 │   ├── transformer.py    # Data transformation
-│   ├── validation.py     # Data validation
+│   ├── user_feedback.py  # Enhanced user feedback system
 │   └── validator.py      # Validation logic
 └── deployment/           # Deployment documentation
     └── README.md         # Deployment guide

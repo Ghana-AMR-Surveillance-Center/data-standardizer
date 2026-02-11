@@ -75,39 +75,84 @@ class PerformanceMonitor:
         return decorator
     
     def optimize_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Optimize DataFrame for better performance."""
+        """Optimize DataFrame for better performance with improved type inference."""
+        if df.empty:
+            return df
+        
         original_memory = df.memory_usage(deep=True).sum() / 1024 / 1024
+        df = df.copy()  # Work on a copy to avoid side effects
         
         # Convert object columns to appropriate types
         for col in df.columns:
-            if df[col].dtype == 'object':
-                # Try to convert to numeric
-                try:
-                    numeric_series = pd.to_numeric(df[col], errors='coerce')
-                    if not numeric_series.isna().all():
-                        df[col] = numeric_series
-                        continue
-                except:
-                    pass
+            # Skip category columns - they're already optimized
+            if pd.api.types.is_categorical_dtype(df[col]):
+                continue
                 
-                # Try to convert to datetime
+            if df[col].dtype == 'object':
+                # Skip if column is mostly empty
+                null_ratio = df[col].isna().sum() / len(df)
+                if null_ratio > 0.9:
+                    continue
+                
+                # Try to convert to numeric (check if majority are numeric)
+                # But skip if column name suggests it's categorical (e.g., "type", "category", "status")
+                categorical_keywords = ['type', 'category', 'status', 'specimen', 'organism', 'antibiotic', 'result']
+                is_likely_categorical = any(keyword in col.lower() for keyword in categorical_keywords)
+                
+                if not is_likely_categorical:
+                    try:
+                        numeric_series = pd.to_numeric(df[col], errors='coerce')
+                        # Type check: pd.to_numeric returns Series for Series input
+                        if isinstance(numeric_series, pd.Series):
+                            numeric_count = numeric_series.notna().sum()  # type: ignore
+                            if numeric_count > len(df) * 0.5:  # More than 50% numeric
+                                df[col] = numeric_series
+                                continue
+                    except Exception:
+                        pass
+                
+                # Try to convert to datetime (check if majority are dates)
                 try:
                     datetime_series = pd.to_datetime(df[col], errors='coerce')
-                    if not datetime_series.isna().all():
+                    datetime_count = datetime_series.notna().sum()
+                    if datetime_count > len(df) * 0.5:  # More than 50% dates
                         df[col] = datetime_series
                         continue
-                except:
+                except Exception:
                     pass
                 
-                # Convert to category if low cardinality
-                if df[col].nunique() / len(df) < 0.5:
-                    df[col] = df[col].astype('category')
+                # Convert to category if low cardinality (improved threshold)
+                # Only for columns that are likely categorical
+                unique_ratio = df[col].nunique() / len(df)
+                if (unique_ratio < 0.5 and df[col].nunique() < 10000) or is_likely_categorical:  # Reasonable limit
+                    try:
+                        df[col] = df[col].astype('category')
+                    except Exception:
+                        pass
+        
+        # Optimize integer columns (downcast to smaller int types)
+        for col in df.select_dtypes(include=['int64']).columns:
+            try:
+                df[col] = pd.to_numeric(df[col], downcast='integer')
+            except Exception:
+                pass
+        
+        # Optimize float columns (downcast to float32 if precision allows)
+        for col in df.select_dtypes(include=['float64']).columns:
+            try:
+                # Check if float32 precision is sufficient
+                float32_series = df[col].astype('float32')
+                if (df[col] - float32_series).abs().max() < 1e-6:
+                    df[col] = float32_series
+            except Exception:
+                pass
         
         optimized_memory = df.memory_usage(deep=True).sum() / 1024 / 1024
         memory_saved = original_memory - optimized_memory
         
         if memory_saved > 1:  # Only log if we saved more than 1MB
-            st.info(f"💾 Memory optimization: Saved {memory_saved:.1f}MB ({memory_saved/original_memory*100:.1f}%)")
+            percent_saved = (memory_saved / original_memory * 100) if original_memory > 0 else 0
+            st.info(f"💾 Memory optimization: Saved {memory_saved:.1f}MB ({percent_saved:.1f}%)")
         
         return df
     

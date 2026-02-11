@@ -62,18 +62,24 @@ class DataValidator:
             'column_stats': {}
         }
         
-        # Validate each column
+        # Import column utilities for case-insensitive matching
+        from .column_utils import find_column_case_insensitive
+        
+        # Validate each column (using case-insensitive matching)
         for column, rules in self.validation_rules.items():
-            if column not in df.columns:
+            # Find column using case-insensitive matching
+            actual_column = find_column_case_insensitive(df, column)
+            
+            if actual_column is None:
                 if rules.get('required', False):
                     results['errors'].append({
                         'type': 'missing_column',
                         'column': column,
-                        'message': f"Required column '{column}' is missing"
+                        'message': f"Required column '{column}' is missing (case-insensitive search)"
                     })
                 continue
             
-            column_results = self._validate_column(df[column], rules)
+            column_results = self._validate_column(df[actual_column], rules)
             results['summary']['total_errors'] += len(column_results['errors'])
             results['summary']['total_warnings'] += len(column_results['warnings'])
             results['errors'].extend(column_results['errors'])

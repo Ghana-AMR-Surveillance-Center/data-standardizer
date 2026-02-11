@@ -23,12 +23,19 @@ def prepare_df_for_display(df: pd.DataFrame) -> pd.DataFrame:
     # Convert mixed-type columns to appropriate types
     for col in df.columns:
         try:
+            # Handle category columns first - convert to string to avoid conversion errors
+            if pd.api.types.is_categorical_dtype(df[col]):
+                df[col] = df[col].astype(str)
+                continue
+            
             if df[col].dtype == 'object':
                 # Check if column contains mixed types that cause Arrow issues
                 sample_values = df[col].dropna().head(10)
                 if len(sample_values) > 0:
                     # Check for mixed numeric and string types
-                    has_numeric = any(pd.to_numeric(sample_values, errors='coerce').notna())
+                    numeric_series = pd.to_numeric(sample_values, errors='coerce')
+                    # Type ignore: pandas Series has notna() method
+                    has_numeric = bool(numeric_series.notna().any()) if isinstance(numeric_series, pd.Series) else False  # type: ignore
                     has_string = any(isinstance(x, str) for x in sample_values if pd.notna(x))
                     
                     if has_numeric and has_string:
@@ -50,19 +57,34 @@ def prepare_df_for_display(df: pd.DataFrame) -> pd.DataFrame:
                     df[col] = df[col].astype(str)
                 elif 'int' in str(df[col].dtype):
                     # Ensure integer columns are properly typed
-                    df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
+                    numeric_col = pd.to_numeric(df[col], errors='coerce')
+                    # Type ignore: pandas Series has astype() method
+                    if isinstance(numeric_col, pd.Series):
+                        df[col] = numeric_col.astype('Int64')  # type: ignore
+                    else:
+                        df[col] = numeric_col
                 elif 'float' in str(df[col].dtype):
                     # Ensure float columns are properly typed
                     df[col] = pd.to_numeric(df[col], errors='coerce')
         except Exception:
             # If any conversion fails, convert to string as fallback
-            df[col] = df[col].astype(str)
+            try:
+                df[col] = df[col].astype(str)
+            except Exception:
+                # Last resort: convert via category if direct string conversion fails
+                try:
+                    if pd.api.types.is_categorical_dtype(df[col]):
+                        df[col] = df[col].cat.add_categories(['']).fillna('')
+                    else:
+                        df[col] = df[col].apply(str)
+                except Exception:
+                    pass  # Keep original if all conversions fail
     
     return df
 
 def clean_column_name(name: str) -> str:
     """
-    Clean a column name to a standardized format.
+    Clean a column name to a standardized format with security validation.
     
     Args:
         name: Original column name
@@ -70,12 +92,33 @@ def clean_column_name(name: str) -> str:
     Returns:
         Cleaned column name
     """
+    if not isinstance(name, str):
+        name = str(name)
+    
+    # Security: Validate input first
+    from utils.security import security_manager
+    validation = security_manager.validate_input(name, 'column_name')
+    
+    if not validation['valid']:
+        # If validation fails, use sanitized version
+        name = validation.get('sanitized', name)
+    
     # Remove special characters and replace spaces with underscores
     clean = re.sub(r'[^\w\s-]', '', name)
     clean = re.sub(r'[-\s]+', '_', clean)
     
     # Convert to lowercase and remove leading/trailing underscores
-    return clean.lower().strip('_')
+    clean = clean.lower().strip('_')
+    
+    # Ensure column name is not empty and doesn't start with a number
+    if not clean or clean[0].isdigit():
+        clean = 'col_' + clean if clean else 'unnamed_column'
+    
+    # Limit length to prevent issues
+    if len(clean) > 100:
+        clean = clean[:100]
+    
+    return clean
 
 def standardize_value(value: Any) -> Any:
     """
@@ -93,18 +136,7 @@ def standardize_value(value: Any) -> Any:
         return value.strip()
     return value
 
-def detect_date_format(series: pd.Series) -> Optional[str]:
-    """
-    Detect the date format in a series.
-    
-    Args:
-        series: Series containing dates
-        
-    Returns:
-        Date format string or None if no consistent format found
-    """
-    # Implementation remains the same...
-    return None
+# detect_date_format is defined later in the file - removing duplicate
 
 def parse_age_value(age_str: str) -> Tuple[Optional[float], str, str]:
     """
