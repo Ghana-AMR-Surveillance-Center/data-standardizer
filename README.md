@@ -1,4 +1,4 @@
-# 🏥 GLASS Data Standardizer
+# 🏥 AMR Data Harmonizer
 
 **Advanced Data Processing & Standardization Platform for AMR Surveillance**
 

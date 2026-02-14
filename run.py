@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GLASS Data Standardizer - Main Production Launcher
+AMR Data Harmonizer - Main Production Launcher
 Clean, production-ready launcher for deployment
 """
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 def main():
     """Main launcher function."""
-    print("🏥 GLASS Data Standardizer v2.0.0 - Production Ready")
+    print("🏥 AMR Data Harmonizer v2.0.0 - Production Ready")
     print("=" * 60)
     
     # Check Python version
@@ -49,7 +49,7 @@ def main():
         input("Press Enter to exit...")
         sys.exit(1)
     
-    print("🚀 Launching GLASS Data Standardizer...")
+    print("🚀 Launching AMR Data Harmonizer...")
     print("📱 The application will open in your default web browser")
     print("🔗 URL: http://localhost:8501")
     print("⏹️  Press Ctrl+C to stop the application")

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GLASS Data Standardizer v2.0.0 - Production Verification Script
+AMR Data Harmonizer v2.0.0 - Production Verification Script
 This script verifies that all components are working correctly for production deployment.
 """
 
@@ -121,7 +121,7 @@ def check_directories():
 
 def main():
     """Main verification function."""
-    print("🏥 GLASS Data Standardizer v2.0.0 - Production Verification")
+    print("🏥 AMR Data Harmonizer v2.0.0 - Production Verification")
     print("=" * 60)
     
     checks = [

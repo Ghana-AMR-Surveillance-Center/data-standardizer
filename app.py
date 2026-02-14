@@ -605,9 +605,9 @@ def main():
             
             if not logo_loaded:
                 # Fallback: Use emoji or text logo
-                st.markdown("## 🏥 GLASS Data Standardizer")
+                st.markdown("## 🏥 AMR Data Harmonizer")
             else:
-                st.markdown("## GLASS Data Standardizer")
+                st.markdown("## AMR Data Harmonizer")
             
             # Add accessibility improvements (if available)
             try:

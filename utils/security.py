@@ -1,5 +1,5 @@
 """
-Security module for production GLASS Data Standardizer
+Security module for production AMR Data Harmonizer
 """
 
 import hashlib

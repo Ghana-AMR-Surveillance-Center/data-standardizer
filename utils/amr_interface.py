@@ -1,5 +1,5 @@
 """
-Enhanced AMR Interface for GLASS Data Standardizer
+Enhanced AMR Interface for AMR Data Harmonizer
 Professional interface optimized for real-world antimicrobial susceptibility data
 
 Features:

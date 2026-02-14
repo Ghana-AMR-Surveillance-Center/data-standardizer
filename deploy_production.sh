@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# GLASS Data Standardizer v2.0.0 - Production Deployment Script
+# AMR Data Harmonizer v2.0.0 - Production Deployment Script
 # This script deploys the application in production mode
 
 echo "============================================================"
-echo "🏥 GLASS Data Standardizer v2.0.0 - Production Deployment"
+echo "🏥 AMR Data Harmonizer v2.0.0 - Production Deployment"
 echo "============================================================"
 echo
 
@@ -67,7 +67,7 @@ fi
 
 # Start the application
 echo
-echo "🚀 Starting GLASS Data Standardizer in production mode..."
+echo "🚀 Starting AMR Data Harmonizer in production mode..."
 echo "📱 The application will be available at: http://localhost:8501"
 echo "⏹️  Press Ctrl+C to stop the application"
 echo

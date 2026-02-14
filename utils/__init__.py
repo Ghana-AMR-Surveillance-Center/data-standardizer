@@ -1,5 +1,5 @@
 """
-GLASS Data Standardizer - Utils Package
+AMR Data Harmonizer - Utils Package
 Comprehensive data standardization and AMR analysis utilities.
 
 This package provides modular components that can be used:
@@ -96,7 +96,7 @@ from .age_transformer import AgeTransformer
 
 # Version and metadata
 __version__ = "2.0.0"
-__author__ = "GLASS Data Standardizer Team"
+__author__ = "AMR Data Harmonizer Team"
 __description__ = "Comprehensive data standardization and AMR analysis utilities"
 
 # Module availability check

@@ -1,4 +1,4 @@
-# GLASS Data Standardizer v2.0.0 - Production Dependencies
+# AMR Data Harmonizer v2.0.0 - Production Dependencies
 # Core application dependencies
 streamlit>=1.28.0
 pandas>=1.5.0

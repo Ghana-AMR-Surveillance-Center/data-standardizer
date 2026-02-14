@@ -18,7 +18,7 @@ Key Features:
 - Memory-efficient processing
 - Professional user interface
 
-Author: GLASS Data Standardizer Team
+Author: AMR Data Harmonizer Team
 Version: 2.0.0
 """
 from __future__ import annotations

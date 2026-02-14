@@ -1,5 +1,5 @@
 """
-Enhanced AMR Analytics Module for GLASS Data Standardizer
+Enhanced AMR Analytics Module for AMR Data Harmonizer
 Optimized for real-world antimicrobial susceptibility data with professional visualizations
 
 Based on analysis of the actual dataset characteristics:
