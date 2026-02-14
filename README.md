@@ -4,6 +4,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io)
+[![CI/CD Pipeline](https://github.com/Ghana-AMR-Surveillance-Center/data-standardizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Ghana-AMR-Surveillance-Center/data-standardizer/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 A comprehensive platform designed to address critical data cleaning challenges in **Antimicrobial Resistance (AMR) surveillance** across African laboratories. This tool helps laboratories prepare their data for submission to global surveillance systems like GLASS and WHONET.
@@ -383,6 +384,17 @@ We welcome contributions from the community! This project is maintained by the G
 ### Code of Conduct
 
 Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms.
+
+### Continuous Integration
+
+This project uses GitHub Actions for automated testing. The CI/CD pipeline:
+
+- **Runs automatically** on every push and pull request to any branch
+- **Tests multiple Python versions**: 3.8, 3.9, 3.10, and 3.11
+- **Executes integration tests**: Validates that all modules can be imported and work together
+- **Verifies production readiness**: Checks dependencies, file structure, and configurations
+
+The workflow file is located at `.github/workflows/ci.yml`. All tests must pass before merging pull requests.
 
 ---
 
