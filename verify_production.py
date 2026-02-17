@@ -9,10 +9,17 @@ import os
 import importlib
 from pathlib import Path
 
+# Fix Windows console encoding for emoji/special chars
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except (AttributeError, OSError):
+        pass
+
 def check_python_version():
     """Check if Python version is compatible."""
     if sys.version_info < (3, 8):
-        print(f"❌ Python 3.8+ required, found {sys.version}")
+        print(f"[FAIL] Python 3.8+ required, found {sys.version}")
         return False
     return True
 
@@ -32,7 +39,7 @@ def check_dependencies():
             missing_packages.append(package)
     
     if missing_packages:
-        print(f"❌ Missing packages: {', '.join(missing_packages)}")
+        print(f"[FAIL] Missing packages: {', '.join(missing_packages)}")
         print("Run: pip install -r requirements.txt")
         return False
     
@@ -57,7 +64,7 @@ def check_file_structure():
             missing_files.append(file_path)
     
     if missing_files:
-        print(f"❌ Missing files: {', '.join(missing_files)}")
+        print(f"[FAIL] Missing files: {', '.join(missing_files)}")
         return False
     
     return True
@@ -88,7 +95,7 @@ def check_imports():
         return True
         
     except ImportError as e:
-        print(f"❌ Import error: {e}")
+        print(f"[FAIL] Import error: {e}")
         return False
 
 def check_configuration():
@@ -97,7 +104,7 @@ def check_configuration():
         from config.production import production_config
         return production_config.validate_config()
     except Exception as e:
-        print(f"❌ Configuration error: {e}")
+        print(f"[FAIL] Configuration error: {e}")
         return False
 
 def check_directories():
@@ -108,20 +115,20 @@ def check_directories():
     for dir_name in required_dirs:
         dir_path = Path(dir_name)
         if dir_path.exists():
-            print(f"✅ {dir_name}/")
+            print(f"[OK] {dir_name}/")
         else:
             try:
                 dir_path.mkdir(exist_ok=True)
-                print(f"✅ {dir_name}/ (created)")
+                print(f"[OK] {dir_name}/ (created)")
             except Exception as e:
-                print(f"❌ {dir_name}/ - cannot create: {e}")
+                print(f"[FAIL] {dir_name}/ - cannot create: {e}")
                 return False
     
     return True
 
 def main():
     """Main verification function."""
-    print("🏥 AMR Data Harmonizer v2.0.0 - Production Verification")
+    print("AMR Data Harmonizer v2.0.0 - Production Verification")
     print("=" * 60)
     
     checks = [
@@ -139,10 +146,10 @@ def main():
             all_passed = False
     
     if all_passed:
-        print("🎉 ALL CHECKS PASSED - Production Ready!")
-        print("✅ The application is ready for deployment")
+        print("[OK] ALL CHECKS PASSED - Production Ready!")
+        print("[OK] The application is ready for deployment")
     else:
-        print("❌ SOME CHECKS FAILED - Please fix issues before deployment")
+        print("[FAIL] SOME CHECKS FAILED - Please fix issues before deployment")
     return all_passed
 
 if __name__ == "__main__":
