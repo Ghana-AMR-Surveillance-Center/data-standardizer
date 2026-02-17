@@ -416,9 +416,3 @@ The workflow file is located at `.github/workflows/ci.yml`. All tests must pass 
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Ghana Health Service for supporting AMR surveillance initiatives
-- The Aurum Institute for technical guidance
-- All contributors who have helped improve this platform
