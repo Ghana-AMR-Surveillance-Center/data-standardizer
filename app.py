@@ -16,8 +16,6 @@ Version: 0.0.3
 import streamlit as st
 import pandas as pd
 
-# Import utilities with error handling
-# Store imported classes in a dict for verification
 _imported_classes = {}
 
 try:
@@ -125,7 +123,6 @@ if 'initialized' not in st.session_state:
     
     st.session_state['initialized'] = True
 
-# Enhanced custom styling with responsive design and user-friendly layout
 st.markdown("""
     <style>
     /* Design tokens for consistency */

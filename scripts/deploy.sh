@@ -1,37 +1,30 @@
 #!/bin/bash
-# AMR Data Harmonizer - Production Deployment Script
 
-set -e  # Exit on error
+set -e
 
 echo "🚀 AMR Data Harmonizer - Production Deployment"
 echo "=================================================="
 
-# Check if running as root
 if [ "$EUID" -eq 0 ]; then 
    echo "❌ Please do not run as root"
    exit 1
 fi
 
-# Check Python version
 python_version=$(python3 --version 2>&1 | awk '{print $2}')
 echo "✓ Python version: $python_version"
 
-# Check if virtual environment exists
 if [ ! -d ".venv" ]; then
     echo "📦 Creating virtual environment..."
     python3 -m venv .venv
 fi
 
-# Activate virtual environment
 echo "🔌 Activating virtual environment..."
 source .venv/bin/activate
 
-# Install/upgrade dependencies
 echo "📥 Installing dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Check environment variables
 echo "🔍 Checking environment configuration..."
 if [ -z "$ENVIRONMENT" ]; then
     echo "⚠️  ENVIRONMENT not set, defaulting to production"

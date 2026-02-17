@@ -8,10 +8,8 @@ import pandas as pd
 import sys
 import os
 
-# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Example 1: Basic data processing pipeline
 def example_basic_pipeline():
     """Basic data processing without Streamlit"""
     from utils.file_handler import FileHandler
@@ -120,7 +118,6 @@ def example_file_merging():
     
     return merged_df
 
-# Example 5: Complete pipeline with all modules
 def example_complete_pipeline():
     """Complete data processing pipeline using all modules"""
     from utils import create_standalone_pipeline
