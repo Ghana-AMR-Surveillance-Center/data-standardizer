@@ -9,6 +9,26 @@
 
 A comprehensive platform designed to address critical data cleaning challenges in **Antimicrobial Resistance (AMR) surveillance** across African laboratories. This tool helps laboratories prepare their data for submission to global surveillance systems like GLASS and WHONET.
 
+### Application Overview
+
+**App — Workflow Selection**
+
+![App Workflow Selection](docs/images/app-workflow.png)
+
+*Main interface with sidebar navigation and workflow selection.*
+
+**App — Workflow Cards**
+
+![App Workflow Cards](docs/images/app-workflow-cards.png)
+
+*Choose Your Workflow: Standardize Single File, Merge Multiple Files (Recommended), and AMR Analytics.*
+
+**About Page**
+
+![About Page](docs/images/about-page.png)
+
+*Platform overview, challenges, solutions, and features with quick navigation.*
+
 ## 🚀 Quick Start
 
 ### Option 1: Streamlit Cloud Deployment (Recommended for Sharing)
@@ -416,9 +436,3 @@ The workflow file is located at `.github/workflows/ci.yml`. All tests must pass 
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Ghana Health Service for supporting AMR surveillance initiatives
-- The Aurum Institute for technical guidance
-- All contributors who have helped improve this platform
