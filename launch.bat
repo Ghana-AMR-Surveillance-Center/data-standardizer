@@ -55,21 +55,30 @@ if not exist "config" mkdir config
 
 echo.
 echo 🚀 Launching AMR Data Harmonizer in Docker...
-echo 📱 The application will open in your default web browser
 echo 🔗 URL: http://localhost:8501
-echo ⏹️  Press Ctrl+C to stop the application
 echo --------------------------------------------------
 
-REM Run Docker container
-docker run --rm -it ^
-    --name amr-data-harmonizer ^
-    -p 8501:8501 ^
-    -v "%CD%\data:/app/data" ^
-    -v "%CD%\logs:/app/logs" ^
-    -v "%CD%\config:/app/config" ^
-    -e ENVIRONMENT=development ^
-    -e DEBUG=true ^
-    -e LOG_LEVEL=INFO ^
-    amr-data-harmonizer:latest
+REM Use -it for interactive (double-click in CMD) or -d for detached (IDE, CI)
+REM Default: -d (works in all environments). Use "launch.bat -f" for foreground logs.
+if "%1"=="-f" goto run_foreground
+if "%1"=="--foreground" goto run_foreground
 
-pause
+:run_detached
+docker run --rm -d --name amr-data-harmonizer -p 8501:8501 -v "%CD%\data:/app/data" -v "%CD%\logs:/app/logs" -v "%CD%\config:/app/config" -e ENVIRONMENT=development -e DEBUG=true -e LOG_LEVEL=INFO amr-data-harmonizer:latest
+if errorlevel 1 (
+    echo ❌ Failed to start container
+    pause
+    exit /b 1
+)
+echo ✅ Container started. Open http://localhost:8501 in your browser.
+echo To stop: docker stop amr-data-harmonizer
+echo To view logs: docker logs -f amr-data-harmonizer
+goto end
+
+:run_foreground
+echo Running in foreground (Ctrl+C to stop)
+docker run --rm -it --name amr-data-harmonizer -p 8501:8501 -v "%CD%\data:/app/data" -v "%CD%\logs:/app/logs" -v "%CD%\config:/app/config" -e ENVIRONMENT=development -e DEBUG=true -e LOG_LEVEL=INFO amr-data-harmonizer:latest
+goto end
+
+:end
+if "%1"=="" pause

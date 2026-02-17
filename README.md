@@ -15,7 +15,7 @@ A comprehensive platform designed to address critical data cleaning challenges i
 
 1. Push your code to GitHub (this repository)
 2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your repository: `Ghana-AMR-Surveillance-Center/data-standardizer`
+3. Connect your repository: `drmichaeladu/data-standardizer`
 4. Set main file path: `app.py`
 5. Click "Deploy" and wait for deployment to complete
 6. Your app will be live at `https://your-app-name.streamlit.app`
@@ -26,8 +26,11 @@ A comprehensive platform designed to address critical data cleaning challenges i
 
 #### Windows (Easy Launch)
 ```bash
-# Double-click or run:
+# Double-click or run (starts in detached mode - works in all terminals):
 launch.bat
+
+# For interactive logs in CMD, use:
+launch.bat -f
 ```
 
 #### Linux/macOS
@@ -252,7 +255,7 @@ MAX_FILE_SIZE_MB=100
 
 1. Push code to GitHub
 2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect repository: `Ghana-AMR-Surveillance-Center/data-standardizer`
+3. Connect repository: `drmichaeladu/data-standardizer`
 4. Set main file: `app.py`
 5. Deploy!
 
@@ -271,6 +274,17 @@ docker-compose up -d
 # Windows
 scripts\deploy.bat
 ```
+
+## 🧪 Testing
+
+Run the unit test suite:
+
+```bash
+pip install -r requirements.txt  # includes pytest
+python -m pytest tests/ -v
+```
+
+Tests cover file handling, validation, column utilities, and CSV/Excel formula injection protection.
 
 ## 🔍 Troubleshooting
 
@@ -319,6 +333,7 @@ scripts\deploy.bat
 
 - **Input Validation**: All inputs are validated
 - **File Upload Limits**: Configurable file size restrictions
+- **CSV/Excel Formula Injection Protection**: Cells starting with `=`, `+`, `-`, `@` are sanitized to prevent execution when files are opened in Excel
 - **Error Information**: Controlled error disclosure
 - **Memory Management**: Automatic cleanup
 - **Security Validation**: File type and content validation
@@ -339,8 +354,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📞 Support
 
 For technical support or issues:
-- **Email**: mikekay262@gmail.com
-- **Repository**: [Ghana-AMR-Surveillance-Center/data-standardizer](https://github.com/Ghana-AMR-Surveillance-Center/data-standardizer)
+- **Email**: drmichaeladu@gmail.com
+- **Repository**: [drmichaeladu/data-standardizer](https://github.com/drmichaeladu/data-standardizer)
 - Check the troubleshooting section above
 - Review the application logs
 - Check the [Production Guide](docs/PRODUCTION_GUIDE.md)
@@ -361,7 +376,7 @@ For technical support or issues:
 **Version**: 2.0.0  
 **Last Updated**: February 2025  
 **Compatibility**: Python 3.8+, Windows 10+, macOS 10.14+, Linux Ubuntu 18.04+  
-**Repository**: [Ghana-AMR-Surveillance-Center/data-standardizer](https://github.com/Ghana-AMR-Surveillance-Center/data-standardizer)
+**Repository**: [drmichaeladu/data-standardizer](https://github.com/drmichaeladu/data-standardizer)
 
 **Made with ❤️ for AMR surveillance data standardization and processing**
 
