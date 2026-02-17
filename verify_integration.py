@@ -98,7 +98,7 @@ def test_integration():
 
 def main():
     print("=" * 60)
-    print("GLASS Data Standardizer - Integration Verification")
+    print("AMR Data Harmonizer - Integration Verification")
     print("=" * 60)
     
     # Test imports

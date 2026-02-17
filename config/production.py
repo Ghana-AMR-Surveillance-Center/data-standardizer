@@ -1,5 +1,5 @@
 """
-Production configuration for GLASS Data Standardizer
+Production configuration for AMR Data Harmonizer
 """
 
 import os

@@ -34,7 +34,7 @@ git push origin main
 1. **Go to Streamlit Cloud**: https://share.streamlit.io
 2. **Sign in** with your GitHub account
 3. **Click "New app"**
-4. **Select repository**: `Ghana-AMR-Surveillance-Center/data-standardizer`
+4. **Select repository**: `drmichaeladu/data-standardizer`
 5. **Set main file**: `app.py`
 6. **Set branch**: `main`
 7. **Click "Deploy"**
@@ -133,7 +133,7 @@ If you encounter issues during deployment:
 2. **Verify requirements**: Ensure all dependencies are listed in `requirements.txt`
 3. **Check configuration**: Verify `.streamlit/config.toml` is correct
 4. **Test locally**: Run `python run.py` locally to verify everything works
-5. **Contact**: mikekay262@gmail.com
+5. **Contact**: drmichaeladu@gmail.com
 
 ## 🎉 Success Criteria
 

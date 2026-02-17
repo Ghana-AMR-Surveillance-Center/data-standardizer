@@ -25,26 +25,33 @@ class UIComponents:
             button_key: Unique button key
             recommended: Whether to show as recommended
         """
-        # Use Streamlit's container for card-like appearance
         with st.container():
-            # Recommended badge
+            # Recommended badge or invisible placeholder - keeps card heights uniform
             if recommended:
-                st.markdown("**⭐ Recommended**")
+                st.markdown(
+                    "<span style='display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);"
+                    "color:white;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.75rem;"
+                    "font-weight:600;margin-bottom:0.5rem'>⭐ Recommended</span>",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.markdown("<span style='visibility:hidden;display:block;line-height:1.8;font-size:0.75rem'>⭐</span>", unsafe_allow_html=True)
             
-            # Icon and title
-            st.markdown(f"## {icon} {title}")
+            # Icon and title - clear hierarchy
+            st.markdown(f"### {icon} {title}")
             
-            # Description
-            st.markdown(description)
+            # Description - concise and scannable
+            st.caption(description)
+            st.markdown("")
             
-            # Features list
+            # Features list - easy to scan with checkmarks
             st.markdown("**Features:**")
             for feature in features:
-                st.markdown(f"✓ {feature}")
+                st.markdown(f"• {feature}")
             
             st.markdown("---")
             
-            # Button
+            # Primary action - prominent button
             if st.button(button_label, key=button_key, use_container_width=True, 
                         type="primary" if recommended else "secondary"):
                 return True
@@ -72,28 +79,21 @@ class UIComponents:
                 icon = step.get('icon', '')
                 title = step.get('title', f'Step {i + 1}')
                 
-                # Determine status
+                # Determine status and styling
                 if i in completed_steps:
                     status_icon = "✅"
-                    status_color = "green"
+                    badge_style = "background:#e6fffa;color:#047857;padding:0.25rem 0.5rem;border-radius:6px;font-weight:600"
                 elif i == current_step:
                     status_icon = icon if icon else "⏳"
-                    status_color = "blue"
+                    badge_style = "background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:0.25rem 0.5rem;border-radius:6px;font-weight:600"
                 else:
                     status_icon = str(i + 1)
-                    status_color = "gray"
+                    badge_style = "background:#f1f5f9;color:#64748b;padding:0.25rem 0.5rem;border-radius:6px;font-weight:600"
                 
-                # Display step
-                st.markdown(f"**{status_icon} {title}**")
-                
-                # Progress indicator
-                if i < len(steps) - 1:
-                    if i in completed_steps:
-                        st.markdown("─ ✅ ─")
-                    elif i == current_step:
-                        st.markdown("─ ⏳ ─")
-                    else:
-                        st.markdown("─ ⭕ ─")
+                st.markdown(
+                    f"<span style='{badge_style}'>{status_icon} {title}</span>",
+                    unsafe_allow_html=True
+                )
     
     @staticmethod
     def info_banner(message: str, type: str = "info", icon: Optional[str] = None, 
@@ -168,7 +168,7 @@ class UIComponents:
     def section_header(title: str, icon: str = "", description: str = "", 
                       collapsible: bool = False):
         """
-        Create a styled section header.
+        Create a styled section header with clear visual hierarchy.
         
         Args:
             title: Section title

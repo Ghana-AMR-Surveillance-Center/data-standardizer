@@ -1,5 +1,5 @@
 """
-GLASS Data Standardizer Module
+AMR Data Harmonizer - GLASS Standardization Module
 Comprehensive standardization for GLASS (Global Antimicrobial Resistance Surveillance System) data submission.
 
 This module provides:

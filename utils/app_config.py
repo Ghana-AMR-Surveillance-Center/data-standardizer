@@ -20,7 +20,7 @@ class AppConfig:
         """Get default configuration."""
         return {
             "app": {
-                "name": "GLASS Data Standardizer",
+                "name": "AMR Data Harmonizer",
                 "version": "2.0.0",
                 "debug": False,
                 "max_file_size_mb": 100,
@@ -29,7 +29,7 @@ class AppConfig:
             "ui": {
                 "theme": "light",
                 "sidebar_state": "expanded",
-                "page_title": "GLASS Data Standardizer",
+                "page_title": "AMR Data Harmonizer",
                 "page_icon": "🏥"
             },
             "data_processing": {

@@ -5,7 +5,7 @@ Handles intelligent column mapping between source and target schemas.
 
 import streamlit as st
 import pandas as pd
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 try:
     from Levenshtein import ratio
     LEVENSHTEIN_AVAILABLE = True
@@ -28,7 +28,7 @@ class ColumnMapper:
         # Simple in-memory mapping history (replaced MappingHistory class)
         self.mapping_history = {}
     
-    def show_mapping_interface(self, df: pd.DataFrame) -> tuple[Dict[str, str], bool]:
+    def show_mapping_interface(self, df: pd.DataFrame) -> Tuple[Dict[str, str], bool]:
         """
         Display the column mapping interface in Streamlit with dropdown selection.
         

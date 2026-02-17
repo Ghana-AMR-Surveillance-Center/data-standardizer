@@ -1,5 +1,5 @@
 """
-Production logging system for GLASS Data Standardizer
+Production logging system for AMR Data Harmonizer
 """
 
 import logging

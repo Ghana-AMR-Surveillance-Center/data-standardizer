@@ -1,6 +1,6 @@
 """
 Standalone Usage Examples
-Demonstrates how to use GLASS Data Standardizer modules independently
+Demonstrates how to use AMR Data Harmonizer modules independently
 without the Streamlit interface.
 """
 
@@ -194,7 +194,7 @@ def example_amr_analytics():
     return resistance_rates
 
 if __name__ == "__main__":
-    print("GLASS Data Standardizer - Standalone Usage Examples")
+    print("AMR Data Harmonizer - Standalone Usage Examples")
     print("=" * 60)
     
     # Run examples (uncomment the one you want to test)

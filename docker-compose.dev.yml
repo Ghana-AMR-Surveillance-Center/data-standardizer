@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  amr-data-harmonizer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: amr-data-harmonizer:latest
+    container_name: amr-data-harmonizer-dev
+    ports:
+      - "8501:8501"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+      - HOST=0.0.0.0
+      - PORT=8501
+      - MAX_FILE_SIZE_MB=100
+      - ENABLE_MONITORING=true
+      - ENABLE_AMR_ANALYTICS=true
+      - ENABLE_FILE_MERGING=true
+      - ENABLE_DATA_QUALITY=true
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+      # Mount source code for development (hot reload)
+      - ./app.py:/app/app.py
+      - ./utils:/app/utils
+    restart: unless-stopped
+    stdin_open: true
+    tty: true

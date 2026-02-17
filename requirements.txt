@@ -1,4 +1,4 @@
-# GLASS Data Standardizer v2.0.0 - Production Dependencies
+# AMR Data Harmonizer v2.0.0 - Production Dependencies
 # Core application dependencies
 streamlit>=1.28.0
 pandas>=1.5.0
@@ -23,3 +23,6 @@ python-Levenshtein>=0.21.0
 # System monitoring and performance
 psutil>=5.9.0
 scipy>=1.9.0
+
+# Testing (optional, for development)
+pytest>=7.0.0

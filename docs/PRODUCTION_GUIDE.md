@@ -2,7 +2,7 @@
 
 ## Overview
 
-The GLASS Data Standardizer is production-ready with comprehensive error handling, logging, security, and monitoring capabilities.
+The AMR Data Harmonizer is production-ready with comprehensive error handling, logging, security, and monitoring capabilities.
 
 ## Quick Start
 

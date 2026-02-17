@@ -1,9 +1,9 @@
 #!/bin/bash
-# GLASS Data Standardizer - Production Deployment Script
+# AMR Data Harmonizer - Production Deployment Script
 
 set -e  # Exit on error
 
-echo "🚀 GLASS Data Standardizer - Production Deployment"
+echo "🚀 AMR Data Harmonizer - Production Deployment"
 echo "=================================================="
 
 # Check if running as root

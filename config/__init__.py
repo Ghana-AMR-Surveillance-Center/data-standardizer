@@ -1,4 +1,4 @@
 """
-Configuration package for GLASS Data Standardizer
+Configuration package for AMR Data Harmonizer
 """
 

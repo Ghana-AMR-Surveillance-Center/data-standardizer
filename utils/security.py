@@ -1,8 +1,9 @@
 """
-Security module for production GLASS Data Standardizer
+Security module for production AMR Data Harmonizer
 """
 
 import hashlib
+import pandas as pd
 import hmac
 import secrets
 import time
@@ -13,6 +14,42 @@ import streamlit as st
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Formula injection prefixes - Excel/CSV interpret these as formula starters
+FORMULA_INJECTION_PREFIXES = ('=', '+', '-', '@', '\t', '\r')
+
+
+def sanitize_dataframe_formulas(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Sanitize DataFrame cells to prevent CSV/Excel formula injection.
+    Cells starting with =, +, -, @, \\t, \\r are prefixed with apostrophe
+    so they display as text and won't execute when opened in Excel.
+    
+    Args:
+        df: Input DataFrame
+        
+    Returns:
+        DataFrame with formula-injection-safe cell values
+    """
+    if df.empty:
+        return df
+    
+    def _sanitize_cell(val):
+        if pd.isna(val):
+            return val
+        # Skip numeric types - they are safe
+        if isinstance(val, (int, float)):
+            return val
+        s = str(val).strip()
+        if s and s[0] in FORMULA_INJECTION_PREFIXES:
+            return "'" + str(val)  # Apostrophe forces text interpretation in Excel
+        return val
+    
+    try:
+        return df.map(_sanitize_cell)  # pandas 2.1+
+    except AttributeError:
+        return df.applymap(_sanitize_cell)  # pandas < 2.1
+
 
 class SecurityManager:
     """Comprehensive security management for production"""

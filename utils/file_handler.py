@@ -19,11 +19,12 @@ except ImportError:
 
 # Optional imports for integrated use
 try:
-    from utils.security import security_manager
+    from utils.security import security_manager, sanitize_dataframe_formulas
     from utils.app_settings import app_settings
 except ImportError:
     security_manager = None
     app_settings = None
+    sanitize_dataframe_formulas = None
 
 logger = logging.getLogger(__name__)
 
@@ -309,6 +310,14 @@ class FileHandler:
                     new_columns.append(col)
             df.columns = new_columns
             logger.warning("Found duplicate column names - renamed with suffixes")
+        
+        # Sanitize formula injection (CSV/Excel security)
+        if sanitize_dataframe_formulas:
+            try:
+                df = sanitize_dataframe_formulas(df)
+                logger.info("Applied formula injection sanitization")
+            except Exception as e:
+                logger.warning(f"Formula sanitization skipped: {e}")
         
         return df
     

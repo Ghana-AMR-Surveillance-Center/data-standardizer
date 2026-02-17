@@ -1,4 +1,4 @@
-# 🏥 GLASS Data Standardizer - Deployment Package
+# 🏥 AMR Data Harmonizer - Deployment Package
 
 ## Quick Start
 

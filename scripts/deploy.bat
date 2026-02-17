@@ -1,7 +1,7 @@
 @echo off
-REM GLASS Data Standardizer - Production Deployment Script (Windows)
+REM AMR Data Harmonizer - Production Deployment Script (Windows)
 
-echo 🚀 GLASS Data Standardizer - Production Deployment
+echo 🚀 AMR Data Harmonizer - Production Deployment
 echo ==================================================
 
 REM Check Python

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GLASS Data Standardizer - Production Launcher
+AMR Data Harmonizer - Production Launcher
 Enhanced with production features and monitoring
 """
 
@@ -107,7 +107,7 @@ def signal_handler(signum, frame):
 
 def launch_application():
     """Launch the Streamlit application with production settings"""
-    print("🚀 Launching GLASS Data Standardizer...")
+    print("🚀 Launching AMR Data Harmonizer...")
     print("🔗 URL: http://localhost:8501")
     print("⏹️  Press Ctrl+C to stop the application")
     print("--------------------------------------------------")
@@ -157,7 +157,7 @@ def launch_application():
 
 def main():
     """Main launcher function"""
-    print("🏥 GLASS Data Standardizer v2.0.0 - Production Ready")
+    print("🏥 AMR Data Harmonizer v2.0.0 - Production Ready")
     print("=" * 60)
     
     # Check Python version

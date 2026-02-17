@@ -9,8 +9,8 @@ This module provides a comprehensive web interface for:
 - Data validation and quality assessment
 - Export functionality
 
-Author: AMR Data Harmonizer Team
-Version: 2.0.0
+Author: drmichaeladu
+Version: 0.0.3
 """
 
 import streamlit as st
@@ -125,61 +125,190 @@ if 'initialized' not in st.session_state:
     
     st.session_state['initialized'] = True
 
-# Enhanced custom styling
+# Enhanced custom styling with responsive design and user-friendly layout
 st.markdown("""
     <style>
+    /* Design tokens for consistency */
+    :root {
+        --spacing-sm: 0.5rem;
+        --spacing-md: 1rem;
+        --spacing-lg: 1.5rem;
+        --spacing-xl: 2rem;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow: 0 2px 12px rgba(102, 126, 234, 0.08);
+        --shadow-hover: 0 8px 24px rgba(102, 126, 234, 0.15);
+        --accent: #667eea;
+        --accent-dark: #5a67d8;
+        --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* Main content - comfortable reading width, improved spacing */
+    .main .block-container { 
+        padding-top: 1.5rem; 
+        padding-bottom: 3rem; 
+        max-width: 1280px;
+    }
+    
+    /* Section spacing for clear visual hierarchy */
+    .main h1, .main h2, .main h3 { margin-top: 1.5rem !important; }
+    .main hr { margin: 1.5rem 0 !important; border: none; border-top: 1px solid #e8e8e8; }
+    
+    /* Main header - refined gradient */
     .main-header {
-        font-size: 2.5rem;
+        font-size: clamp(1.5rem, 5vw, 2.5rem);
         font-weight: 700;
-        margin-bottom: 1rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin-bottom: 0.25rem !important;
+        letter-spacing: -0.02em;
+        background: var(--gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
+    
+    /* Step headers - clear hierarchy with subtle accent */
     .step-header {
-        font-size: 1.8rem;
+        font-size: clamp(1.2rem, 4vw, 1.8rem);
         font-weight: 600;
-        margin: 1.5rem 0;
-        color: #212529;
+        margin: 1.5rem 0 0.75rem 0 !important;
+        color: #1a202c;
         padding-bottom: 0.5rem;
-        border-bottom: 3px solid #007bff;
+        border-bottom: 3px solid var(--accent);
+        letter-spacing: -0.01em;
     }
-    .success-box {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    /* Workflow/action cards - refined with better hover */
+    [data-testid="stHorizontalBlock"] { align-items: stretch !important; }
+    [data-testid="column"]:has(button) {
+        display: flex !important;
+        flex-direction: column !important;
     }
-    .info-box {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        background-color: #cce5ff;
-        border: 1px solid #b8daff;
-        color: #004085;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    [data-testid="column"]:has(button) > div {
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 400px !important;
     }
+    [data-testid="column"]:has(button) > div:hover {
+        border-color: var(--accent);
+        box-shadow: var(--shadow-hover);
+        background: #fff;
+        transform: translateY(-2px);
+    }
+    [data-testid="column"]:has(button) > div > div:last-child {
+        margin-top: auto !important;
+    }
+    
+    /* Buttons - prominent, accessible, focus states */
     .stButton>button {
-        border-radius: 8px;
-        transition: all 0.3s ease;
+        border-radius: var(--radius-sm);
+        transition: all 0.2s ease;
         font-weight: 600;
+        padding: 0.6rem 1.25rem;
     }
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-hover);
     }
-    .workflow-container {
-        padding: 2rem 0;
+    .stButton>button:focus {
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
     }
-    .metric-container {
-        background: white;
+    .stButton>button[kind="primary"] {
+        background: var(--gradient) !important;
+        border: none !important;
+    }
+    
+    /* Info boxes - clearer feedback with icons */
+    .stSuccess, .stInfo, .stWarning, .stError {
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem !important;
+        margin: 0.75rem 0 !important;
+        border-left: 4px solid;
+    }
+    .stSuccess { border-left-color: #48bb78; }
+    .stInfo { border-left-color: var(--accent); }
+    .stWarning { border-left-color: #ed8936; }
+    .stError { border-left-color: #e53e3e; }
+    
+    /* Sidebar - cleaner, scannable */
+    [data-testid="stSidebar"] {
+        padding: 1rem 1.25rem !important;
+        background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%);
+    }
+    [data-testid="stSidebar"] .stMarkdown { margin-bottom: 0.5rem !important; }
+    
+    /* Display "App" with capital A in sidebar navigation */
+    [data-testid="stSidebar"] [data-testid="stSidebarNav"] span,
+    [data-testid="stSidebar"] [data-testid="stSidebarNav"] a {
+        text-transform: capitalize !important;
+    }
+    
+    /* Expanders - clearer affordance */
+    .streamlit-expanderHeader { font-weight: 600 !important; }
+    .streamlit-expanderHeader:hover { background: #f8fafc !important; }
+    
+    /* Dataframes - clear boundaries, better readability */
+    [data-testid="stDataFrame"], .stDataFrame { 
+        overflow-x: auto !important; 
+        border-radius: var(--radius);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    
+    /* File uploader - more inviting */
+    [data-testid="stFileUploader"] {
+        border: 2px dashed #cbd5e0;
+        border-radius: var(--radius);
         padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin: 0.5rem 0;
+        transition: border-color 0.2s;
     }
+    [data-testid="stFileUploader"]:hover {
+        border-color: var(--accent);
+    }
+    
+    /* Progress bar - accent color */
+    .stProgress > div > div { background: var(--gradient) !important; }
+    
+    /* Responsive: tablets and below */
+    @media (max-width: 768px) {
+        .main-header { font-size: 1.75rem; }
+        .step-header { font-size: 1.4rem; margin: 1rem 0 !important; }
+        [data-testid="stSidebar"] img { max-width: 150px !important; }
+        [data-testid="column"]:has(button) > div { min-height: 360px !important; }
+    }
+    
+    /* Responsive: mobile */
+    @media (max-width: 480px) {
+        .main-header { font-size: 1.5rem; }
+        .step-header { font-size: 1.2rem; margin: 0.75rem 0 !important; }
+        [data-testid="stSidebar"] img { max-width: 120px !important; }
+        .stButton>button { padding: 0.5rem 0.75rem; font-size: 0.9rem; }
+        [data-testid="column"]:has(button) > div { min-height: 340px !important; }
+    }
+    
+    /* Hero and CTA sections */
+    .hero-section, .cta-section {
+        padding: clamp(1rem, 4vw, 2rem) !important;
+        font-size: clamp(0.9rem, 2vw, 1.1rem) !important;
+    }
+    .hero-section h2, .cta-section h3 {
+        font-size: clamp(1.25rem, 4vw, 1.75rem) !important;
+    }
+    @media (max-width: 768px) {
+        .hero-section, .cta-section { padding: 1.25rem !important; }
+    }
+    @media (max-width: 480px) {
+        .hero-section, .cta-section { padding: 1rem !important; }
+    }
+    
+    /* Caption - subtle, readable */
+    .stCaption { color: #64748b !important; font-size: 0.9rem !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -275,194 +404,6 @@ def show_progress():
         
         ui_components.step_indicator(step_list, current, completed)
         st.progress(progress)
-
-def _show_introduction():
-    """
-    Display introduction section explaining what the app is and the problems it solves.
-    """
-    st.markdown("---")
-    
-    # Hero Section
-    st.markdown("""
-    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;'>
-        <h2 style='color: white; margin-bottom: 1rem;'>🏥 Welcome to AMR Data Harmonizer</h2>
-        <p style='font-size: 1.1rem; line-height: 1.6; color: white;'>
-            A comprehensive platform designed to address critical data cleaning challenges in 
-            <strong>Antimicrobial Resistance (AMR) surveillance</strong> across African laboratories.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Problem Statement
-    st.markdown("### 🔍 The Challenge")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        #### Common Data Quality Issues in African AMR Surveillance:
-        
-        - **📊 Inconsistent Data Collection**
-          - Varied formats and structures across laboratories
-          - Different naming conventions for organisms and antimicrobials
-          - Inconsistent date formats and data entry practices
-        
-        - **🔬 Limited Laboratory Capacity**
-          - Manual data entry leading to errors
-          - Lack of standardized reporting formats
-          - Limited quality assurance processes
-        
-        - **📁 Fragmented Data Management**
-          - Data stored in multiple systems and formats
-          - Difficulty in merging data from different sources
-          - Lack of data harmonization
-        """)
-    
-    with col2:
-        st.markdown("""
-        #### Impact on Global Surveillance:
-        
-        - **🚫 Submission Barriers**
-          - Data doesn't meet GLASS (Global Antimicrobial Resistance and Use Surveillance System) requirements
-          - Incompatible with WHONET format
-          - Missing required fields and validation failures
-        
-        - **📉 Reduced Data Quality**
-          - Incomplete datasets
-          - Inconsistent organism names and antimicrobial results
-          - Missing critical metadata
-        
-        - **⏱️ Time-Consuming Manual Work**
-          - Hours spent on data cleaning and standardization
-          - High risk of human error
-          - Delayed submission to global surveillance systems
-        """)
-    
-    st.markdown("---")
-    
-    # Solution Section
-    st.markdown("### ✨ How AMR Data Harmonizer Solves These Problems")
-    
-    solution_cols = st.columns(3)
-    
-    with solution_cols[0]:
-        st.markdown("""
-        #### 🧹 **Intelligent Data Cleaning**
-        
-        - **Automatic Detection**: Identifies AMR-specific columns (organisms, antimicrobials, specimens)
-        - **Flexible Cleaning**: Handles various data formats and edge cases
-        - **Standardization**: Normalizes organism names, antimicrobial results, and specimen types
-        - **Edge Case Handling**: Manages encoding issues, delimiters, merged cells, and more
-        """)
-    
-    with solution_cols[1]:
-        st.markdown("""
-        #### 🔗 **Smart Data Integration**
-        
-        - **Multi-File Merging**: Intelligently combines data from multiple sources
-        - **Column Mapping**: Automatic matching with fuzzy logic
-        - **Data Harmonization**: Resolves inconsistencies across datasets
-        - **Quality Validation**: Ensures merged data meets standards
-        """)
-    
-    with solution_cols[2]:
-        st.markdown("""
-        #### 📤 **Global Submission Ready**
-        
-        - **GLASS Preparation**: Wizard-guided preparation for GLASS submission
-        - **WHONET Compatibility**: Standardizes data for WHONET import
-        - **Quality Assessment**: Comprehensive data quality scoring
-        - **Export Options**: Multiple formats (CSV, Excel, JSON, XML)
-        """)
-    
-    st.markdown("---")
-    
-    # Key Features
-    st.markdown("### 🎯 Key Features")
-    
-    feature_cols = st.columns(2)
-    
-    with feature_cols[0]:
-        st.markdown("""
-        - ✅ **Flexible AMR Data Cleaning**
-          - Automatic organism name standardization
-          - Antimicrobial result normalization (S/R/I/ND/NM)
-          - Specimen type standardization
-          - Date format handling
-          - Age extraction from text
-        
-        - ✅ **Robust File Processing**
-          - Multiple encoding support (UTF-8, Latin-1, CP1252, etc.)
-          - Automatic delimiter detection
-          - Handles empty files, multiple sheets, merged cells
-          - Footer/summary row removal
-        """)
-    
-    with feature_cols[1]:
-        st.markdown("""
-        - ✅ **Advanced Analytics**
-          - AMR resistance analysis with statistical validation
-          - Antibiogram generation
-          - Data quality assessment
-          - Professional visualizations
-        
-        - ✅ **Production Ready**
-          - Comprehensive error handling
-          - Health monitoring
-          - Security validation
-          - Performance optimization
-        """)
-    
-    st.markdown("---")
-    
-    # Use Cases
-    st.markdown("### 💼 Who Can Benefit?")
-    
-    use_case_cols = st.columns(3)
-    
-    with use_case_cols[0]:
-        st.markdown("""
-        **🏥 Laboratory Staff**
-        - Clean and standardize daily lab data
-        - Prepare data for submission
-        - Generate quality reports
-        """)
-    
-    with use_case_cols[1]:
-        st.markdown("""
-        **📊 Data Managers**
-        - Merge data from multiple sources
-        - Harmonize inconsistent datasets
-        - Ensure data quality standards
-        """)
-    
-    with use_case_cols[2]:
-        st.markdown("""
-        **🔬 Researchers**
-        - Prepare data for analysis
-        - Generate AMR analytics
-        - Export publication-ready reports
-        """)
-    
-    st.markdown("---")
-    
-    # Call to Action
-    st.markdown("""
-    <div style='background-color: #000000; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #667eea;'>
-        <h3 style='margin-top: 0;'>🚀 Ready to Get Started?</h3>
-        <p style='margin-bottom: 0.5rem;'>
-            Choose a workflow below to begin processing your AMR surveillance data. 
-            The tool will guide you through each step with clear instructions.
-        </p>
-        <p style='margin-bottom: 0; font-size: 0.9rem; color: #666;'>
-            <strong>💡 Tip:</strong> Start with "Merge Multiple Files" if you have data from multiple sources, 
-            or "Standardize Single File" for individual file processing.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
 
 def main():
     """
@@ -588,16 +529,16 @@ def main():
         with st.sidebar:
             # Try to load logo, use fallback if not found (for cloud deployment)
             logo_paths = [
-                "Png/Veraya (2).png",
-                "Png/Veraya (1).png",
-                "Png/Veraya (3).png"
+                "Png/logo.png",
+                "Png/amr-secretariat.png",
+                "Png/drmichaeladu-logo.png"
             ]
             logo_loaded = False
             for logo_path in logo_paths:
                 try:
                     import os
                     if os.path.exists(logo_path):
-                        st.image(logo_path, width=200)
+                        st.image(logo_path, use_container_width=True)
                         logo_loaded = True
                         break
                 except:
@@ -605,9 +546,9 @@ def main():
             
             if not logo_loaded:
                 # Fallback: Use emoji or text logo
-                st.markdown("## 🏥 GLASS Data Standardizer")
+                st.markdown("## 🏥 AMR Data Harmonizer")
             else:
-                st.markdown("## GLASS Data Standardizer")
+                st.markdown("## AMR Data Harmonizer")
             
             # Add accessibility improvements (if available)
             try:
@@ -620,11 +561,11 @@ def main():
             app_settings.show_settings_ui()
             
             st.markdown("---")
-            st.markdown("### Quick Guide")
+            st.markdown("### 📋 Quick Guide")
             
             # Update quick guide based on workflow
             if not st.session_state['workflow_selected']:
-                st.info("Choose your workflow to begin")
+                st.info("👆 Choose your workflow above to begin")
             elif st.session_state['workflow_type'] == 'single':
                 st.info("""
                 1. Upload your data file
@@ -675,11 +616,11 @@ def main():
                         {"title": "Run Analysis", "description": "Generate resistance analysis and visualizations"}
                     ]
                     current_step = sum(st.session_state['amr_steps'].values())
-                    user_feedback.show_workflow_guide(steps, current_step, background_color="#000000")
+                    user_feedback.show_workflow_guide(steps, current_step)
             
             st.markdown("---")
-            st.caption("Version 2.0.0 | © 2025 Veraya Health Technologies")
-            st.caption("[Need help?](mailto:mikekay262@gmail.com)")
+            st.caption("Version 2.0.0 | © 2025 drmichaeladu")
+            st.caption("[Need help?](mailto:drmichaeladu@gmail.com)")
             
             # Performance and cache controls
             with st.expander("🔧 Advanced", expanded=False):
@@ -704,10 +645,12 @@ def main():
         
         # Main content
         st.markdown('<h1 class="main-header">AMR Data Harmonizer</h1>', unsafe_allow_html=True)
-        
-        # Introduction Section
-        if not st.session_state.get('workflow_selected', False):
-            _show_introduction()
+        st.markdown(
+            "<p style='color:#64748b;font-size:1rem;margin-top:0;margin-bottom:1.5rem;line-height:1.5'>"
+            "Process and standardize AMR surveillance data for GLASS and WHONET submission. "
+            "Choose a workflow below to get started.</p>",
+            unsafe_allow_html=True
+        )
         
         # Enhanced Workflow Selection
         if not st.session_state['workflow_selected']:
@@ -715,6 +658,7 @@ def main():
             
             st.markdown('<h2 class="step-header">Choose Your Workflow</h2>', unsafe_allow_html=True)
             st.markdown("Select the workflow that best fits your data processing needs:")
+            st.markdown("")  # Spacing for readability
             
             col1, col2, col3 = st.columns(3)
             
@@ -777,10 +721,12 @@ def main():
             
             # Add GLASS and WHONET Preparation Wizards as prominent options
             st.markdown("---")
-            st.markdown("### 🎯 **Data Preparation Wizards**")
-            st.markdown("""
-            **Perfect for non-technical users!** Step-by-step guided processes to prepare your AMR data.
-            """)
+            st.markdown('<h2 class="step-header">🎯 Data Preparation Wizards</h2>', unsafe_allow_html=True)
+            st.markdown(
+                "<p style='color:#64748b;margin-bottom:1rem'>"
+                "Perfect for non-technical users — step-by-step guided processes to prepare your AMR data.</p>",
+                unsafe_allow_html=True
+            )
             
             col1, col2 = st.columns(2)
             with col1:
@@ -869,8 +815,9 @@ def main():
                 for tip in tips:
                     st.markdown(f"- {tip}")
             
+            st.markdown("")
             ui_components.info_banner(
-                "💡 **Tip**: Start with the 'Merge Multiple Files' workflow if you're unsure - it's the most versatile option!",
+                "💡 **Tip**: Start with the 'Merge Multiple Files' workflow if you're unsure — it's the most versatile option!",
                 type="info"
             )
             return
@@ -1077,7 +1024,8 @@ def main():
                                         data_profiler.show_profile_report(profile_results)
                             
                     except Exception as e:
-                        ui_validator.show_operation_feedback(
+                        safe_ui_validator_call(
+                            'show_operation_feedback',
                             "Data Processing", "error",
                             "An error occurred while processing your data.",
                             details=f"Error: {str(e)}\n\nPlease try:\n1. Checking your file format\n2. Ensuring the file is not corrupted\n3. Contacting support if the issue persists"
