@@ -43,11 +43,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: Run integration tests
+      - name: Run unit and integration tests
         run: |
-          python verify_integration.py
-      
-      - name: Run production verification tests (optional)
-        continue-on-error: true
-        run: |
-          python verify_production.py
+          pytest
