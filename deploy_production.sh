@@ -1,14 +1,10 @@
 #!/bin/bash
 
-# AMR Data Harmonizer v2.0.0 - Production Deployment Script
-# This script deploys the application in production mode
-
 echo "============================================================"
 echo "🏥 AMR Data Harmonizer v2.0.0 - Production Deployment"
 echo "============================================================"
 echo
 
-# Check if Python is available
 if ! command -v python3 &> /dev/null; then
     echo "❌ Python 3 is not installed or not in PATH"
     echo "Please install Python 3.8 or higher"
@@ -17,7 +13,6 @@ fi
 
 echo "✅ Python detected: $(python3 --version)"
 
-# Check if virtual environment exists
 if [ ! -d ".venv" ]; then
     echo "📦 Creating virtual environment..."
     python3 -m venv .venv

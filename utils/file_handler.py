@@ -9,7 +9,6 @@ import logging
 from typing import Optional, Dict, Any, List, Tuple
 import os
 
-# Optional streamlit import for integrated use
 try:
     import streamlit as st
     STREAMLIT_AVAILABLE = True
@@ -17,7 +16,6 @@ except ImportError:
     STREAMLIT_AVAILABLE = False
     st = None
 
-# Optional imports for integrated use
 try:
     from utils.security import security_manager, sanitize_dataframe_formulas
     from utils.app_settings import app_settings

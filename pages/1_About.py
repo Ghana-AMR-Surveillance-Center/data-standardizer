@@ -54,7 +54,6 @@ with st.sidebar:
     st.markdown("---")
     st.caption("v2.0.0 | © 2025 drmichaeladu")
 
-# Enhanced styling with responsive design
 st.markdown("""
     <style>
     /* Hero */
@@ -324,9 +323,7 @@ st.markdown("")
 if st.button("🚀 Go to App — Choose Your Workflow", type="primary", use_container_width=True, key="cta_bottom"):
     st.switch_page("app.py")
 
-# Footer with compact nav hint
 st.markdown("---")
 st.caption("👈 Use **App** in the sidebar or the button above to choose your workflow.")
 
-# Footer
 st.markdown('<p class="about-footer">AMR Data Harmonizer v2.0.0 | © 2025 drmichaeladu</p>', unsafe_allow_html=True)

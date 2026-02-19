@@ -1,32 +1,8 @@
 """
 AMR Data Harmonizer - Utils Package
 Comprehensive data standardization and AMR analysis utilities.
-
-This package provides modular components that can be used:
-1. Integrated: As part of the main Streamlit application
-2. Independently: As standalone Python modules in scripts or other applications
-
-Usage Examples:
-
-# Integrated (in Streamlit app):
-from utils.file_handler import FileHandler
-file_handler = FileHandler()
-df = file_handler.upload_file()
-
-# Independent (in Python script):
-from utils.file_handler import FileHandler
-import pandas as pd
-
-file_handler = FileHandler()
-# For standalone use, read file directly
-df = pd.read_csv('data.csv')
-# Then use other utilities
-from utils.transformer import DataTransformer
-transformer = DataTransformer()
-cleaned_df = transformer.clean_data(df)
 """
 
-# Core Data Processing Modules
 from .file_handler import FileHandler
 from .file_merger import FileMerger
 from .schema_analyzer import SchemaAnalyzer
@@ -99,7 +75,6 @@ __version__ = "2.0.0"
 __author__ = "AMR Data Harmonizer Team"
 __description__ = "Comprehensive data standardization and AMR analysis utilities"
 
-# Module availability check
 def check_module_availability():
     """
     Check if all required modules are available.
@@ -144,7 +119,6 @@ def check_module_availability():
     
     return status
 
-# Convenience function for standalone usage
 def create_standalone_pipeline():
     """
     Create a complete data processing pipeline for standalone use.
